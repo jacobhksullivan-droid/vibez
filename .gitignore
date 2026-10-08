@@ -1,0 +1,10 @@
+# secrets — never commit
+tools/passcode.txt
+# build output (made by tools/build_site.py)
+deploy/
+# local / machine files
+.claude/
+.DS_Store
+__pycache__/
+node_modules/
+*.pyc

@@ -1,0 +1,346 @@
+<title>Coast Call Spot Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a field logbook — summary + rule findings up top, then one log entry per spot with a compass card. */
+:root {
+  --bg: #eef3f2;          /* chart-paper sea grey */
+  --card: #ffffff;
+  --ink: #12302f;         /* deep water */
+  --muted: #557270;
+  --line: #cfdcda;
+  --swell: #1d6fa5;       /* swell = blue */
+  --wind: #2f8a5b;        /* wind = green */
+  --accent: #c2541b;      /* buoy orange, used sparingly */
+  --ok: #2f8a5b; --warn: #b7791f; --bad: #c0392b;
+  --okbg: #e3f2ea; --warnbg: #fbf0d9; --badbg: #fbe4e1;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1a1b; --card: #142425; --ink: #dcebe9; --muted: #8fb0ad; --line: #26403f;
+  --swell: #5aa9dc; --wind: #5cc48d; --accent: #ee8148;
+  --ok: #5cc48d; --warn: #e2b350; --bad: #f07a6a; --okbg: #17352a; --warnbg: #3a2f14; --badbg: #3d1d1a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d1a1b; --card: #142425; --ink: #dcebe9; --muted: #8fb0ad; --line: #26403f;
+  --swell: #5aa9dc; --wind: #5cc48d; --accent: #ee8148;
+  --ok: #5cc48d; --warn: #e2b350; --bad: #f07a6a; --okbg: #17352a; --warnbg: #3a2f14; --badbg: #3d1d1a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); letter-spacing: .01em; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.4rem; line-height: 1; font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 600; }
+h3 { font-size: 1.35rem; font-weight: 600; line-height: 1.15; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--swell); }
+.eyebrow { font: 600 .75rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 2px; }
+.stat b { font: 600 1.3rem/1 var(--mono); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: .85rem; }
+.findings { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.findings li { max-width: 75ch; }
+.controls { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button, .btn { font: 600 .85rem var(--body); border: 0; background: var(--card); color: var(--ink); padding: 8px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btn { border: 1px solid var(--line); border-radius: 8px; }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+select { font: inherit; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+button:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.region-h { margin-top: 12px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.region-h small { color: var(--muted); font-family: var(--mono); font-size: .8rem; }
+.spot { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 150px 1fr; gap: 16px; min-width: 0; }
+.spot.flagged { border-left: 4px solid var(--warn); }
+.spot.legal-bad { border-left: 4px solid var(--bad); }
+@media (max-width: 620px) { .spot { grid-template-columns: 1fr; } .compass-col { justify-self: center; } }
+.compass-col { display: grid; gap: 6px; justify-items: center; align-content: start; }
+.compass-col .side-name { font: .72rem/1.2 var(--mono); color: var(--muted); text-align: center; max-width: 150px; }
+.legend { display: flex; gap: 10px; flex-wrap: wrap; font: .75rem var(--mono); color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.main { display: grid; gap: 10px; min-width: 0; }
+.head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: start; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font: 600 .72rem/1 var(--mono); padding: 5px 7px; border-radius: 5px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tag.type-spear { color: var(--accent); border-color: var(--accent); }
+.tag.type-surf { color: var(--swell); border-color: var(--swell); }
+.conf { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip { font: .7rem/1 var(--mono); padding: 4px 6px; border-radius: 4px; }
+.chip.high { background: var(--okbg); color: var(--ok); }
+.chip.med { background: var(--warnbg); color: var(--warn); }
+.chip.low { background: var(--badbg); color: var(--bad); font-weight: 600; }
+dl { margin: 0; display: grid; grid-template-columns: 9.5em 1fr; gap: 4px 12px; }
+dt { color: var(--muted); font-size: .85rem; }
+dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 460px) { dl { grid-template-columns: 1fr; } dt { margin-top: 6px; } }
+.mono { font-family: var(--mono); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.rule { border: 1px dashed var(--line); border-radius: 6px; padding: 8px; display: grid; gap: 4px; }
+.rule code { font: .75rem var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.legal { font-weight: 700; }
+.legal.ok { color: var(--ok); } .legal.bad { color: var(--bad); } .legal.warn { color: var(--warn); }
+.flags { margin: 0; padding: 8px 10px 8px 26px; background: var(--warnbg); border-radius: 6px; color: var(--ink); }
+.review { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 1px solid var(--line); padding-top: 10px; }
+.review textarea { flex: 1 1 260px; min-height: 38px; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.review .seg button[data-v="ok"][aria-pressed="true"] { background: var(--ok); color: #fff; }
+.review .seg button[data-v="fix"][aria-pressed="true"] { background: var(--bad); color: #fff; }
+.copybox { display: grid; gap: 8px; }
+.copybox textarea { width: 100%; min-height: 120px; font: .8rem var(--mono); padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.note-foot { color: var(--muted); font-size: .85rem; }
+.kf { letter-spacing: .1em; color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <div class="eyebrow">Coast Call · NSW 21–31 Oct 2026 · draft v2</div>
+    <h1>Spot review</h1>
+    <p class="lede">Every spot the app will score, Merimbula to Coffs. Check the pins, which way each spot faces, and what it's sheltered from. Mark each one OK or "needs fix", then tap <b>Copy my notes</b> and paste them into the chat.</p>
+  </header>
+
+  <section class="panel" aria-label="Summary">
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="panel" aria-label="Rules found">
+    <h2>Rules the app applies</h2>
+    <ul class="findings">
+      <li>A spot gets a "no spearing" warning only if its pin is inside a sanctuary zone or sanctuary aquatic reserve.</li>
+      <li>Spear spots are all headlands, points or rocky bays, because spearing is banned on ocean beaches.</li>
+    </ul>
+  </section>
+
+  <section class="panel" aria-label="Research">
+    <h2>Where the local knowledge came from</h2>
+    <ul class="findings">
+      <li><b>Surf:</b> every Wannasurf break from Merimbula to Coffs (439 pages of surfer-written guides: swell and wind directions, tides, level, dangers, notes).</li>
+      <li><b>Spear:</b> Michael McFadyen's NSW shore-dive guides, Dive Swansea, Fish Rock and SWR dive centres, Dive Forster, USFA (the spearfishing association) submissions, spearo trip reports, Deckee/Fishraider threads, local fishing reports and the official DPI fishing guides.</li>
+      <li><b>What changed:</b> spots that kept getting praised came in (e.g. Kiama Blowhole Point, Penguin Head, Tathra Wharf, Merimbula Wharf, Swansea Heads, Boat Harbour, Ladies Reef, Durras, Potato Point, McKenzies, Pambula Beach); spots with no support or a poor reputation went out (Snapper Point, Broulee, Short Point). Rules like "any E/NE swell crashes into the Skillion entry" are now local rules the scoring uses.</li>
+      <li><b>Round 3 (Google + Reddit via your Chrome):</b> Reddit itself is blocked, so I read Reddit, forum and Facebook-group snippets through Google (and checked Google's AI answers, which are mostly generic). New: Maloneys Bay (Bass Point), Redhead Point, Hat Head, Seven Mile Beach (Gerroa), Cuttagee, Blacksmiths, Boomerang Beach, Scotts Head, Arrawarra Point. Locals' tips added to Currarong, Bermagui, Swansea, Boat Harbour, Seal Rocks, Trial Bay, The Farm, Shelly, Soldiers, Nobbys, Diggers.</li>
+      <li><b>Couldn't read:</b> full Reddit threads, Deckee's map and spot reviews (login), DeeperBlue forum (guest limit). Paste threads or screenshots and I'll add them.</li>
+    </ul>
+  </section>
+
+  <div class="controls" role="toolbar" aria-label="Filters">
+    <div class="seg" id="typeSeg">
+      <button type="button" data-t="all" aria-pressed="true">All</button>
+      <button type="button" data-t="surf" aria-pressed="false">Surf</button>
+      <button type="button" data-t="spear" aria-pressed="false">Spear</button>
+    </div>
+    <select id="regionSel" aria-label="Region"><option value="all">All regions</option></select>
+    <div class="seg" id="flagSeg">
+      <button type="button" data-f="all" aria-pressed="true">Everything</button>
+      <button type="button" data-f="flagged" aria-pressed="false">Only flagged</button>
+    </div>
+    <span class="legend"><span><i style="background:var(--swell)"></i>swell</span><span><i style="background:var(--wind)"></i>wind</span><span><i style="background:var(--accent)"></i>facing</span></span>
+  </div>
+
+  <main id="list" style="display:grid;gap:12px"></main>
+
+  <section class="panel copybox" aria-label="Your notes">
+    <h2>Send me your review</h2>
+    <p class="note-foot">Your marks are saved in this browser only. Copy them and paste into the chat.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="copyBtn" type="button">Copy my notes</button><span id="copyMsg" class="note-foot" role="status"></span></div>
+    <textarea id="notesOut" readonly aria-label="Your notes as text"></textarea>
+  </section>
+
+  <p class="note-foot">Decision support only. Check conditions yourself. Always dive one-up-one-down.</p>
+</div>
+
+<script>
+/*__SPOTS__*/
+const LEGAL = /*__LEGAL__*/;
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const COMPASS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const card = d => COMPASS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+const rng = r => `${card(r[0])}–${card(r[1])} (${r[0]}–${r[1]}°)`;
+const amt = a => a >= 0.85 ? "full" : a >= 0.55 ? "strong" : "partial";
+
+let store = {};
+try { store = JSON.parse(localStorage.getItem("cc-review") || "{}"); } catch (e) { store = {}; }
+const save = () => { try { localStorage.setItem("cc-review", JSON.stringify(store)); } catch (e) {} renderNotes(); };
+
+// ---------- compass SVG ----------
+function pt(cx, cy, r, deg) { const a = deg * Math.PI / 180; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; }
+function arc(cx, cy, r, from, to) {
+  let span = ((to - from) % 360 + 360) % 360; if (span === 0) span = 359.9;
+  const [x1, y1] = pt(cx, cy, r, from), [x2, y2] = pt(cx, cy, r, from + span);
+  return `M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${span > 180 ? 1 : 0} 1 ${x2.toFixed(1)},${y2.toFixed(1)}`;
+}
+function compass({ facing, swell = [], wind = [], swellLabel, windLabel }) {
+  const c = 60, rS = 36, rW = 48;
+  let s = `<svg viewBox="0 0 120 120" width="130" height="130" role="img" aria-label="Faces ${card(facing)} ${facing}°. ${swellLabel}. ${windLabel}.">`;
+  s += `<circle cx="${c}" cy="${c}" r="${rW + 6}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  s += `<circle cx="${c}" cy="${c}" r="24" fill="var(--bg)" stroke="var(--line)"/>`;
+  for (let d = 0; d < 360; d += 45) { const [x1, y1] = pt(c, c, rW + 3, d), [x2, y2] = pt(c, c, rW + 7, d); s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--muted)" stroke-width="1"/>`; }
+  [["N",0],["E",90],["S",180],["W",270]].forEach(([l, d]) => { const [x, y] = pt(c, c, 16, d); s += `<text x="${x}" y="${y + 3.5}" text-anchor="middle" font-size="9" font-family="var(--mono)" fill="var(--muted)">${l}</text>`; });
+  swell.forEach(r => s += `<path d="${arc(c, c, rS, r[0], r[1])}" fill="none" stroke="var(--swell)" stroke-width="8" stroke-opacity="${0.35 + 0.65 * (r[2] ?? 1)}"/>`);
+  wind.forEach(r => s += `<path d="${arc(c, c, rW, r[0], r[1])}" fill="none" stroke="var(--wind)" stroke-width="6" stroke-opacity="${0.35 + 0.65 * (r[2] ?? 1)}"/>`);
+  const [ax, ay] = pt(c, c, 30, facing), [bx, by] = pt(c, c, 4, facing + 180);
+  s += `<line x1="${bx}" y1="${by}" x2="${ax}" y2="${ay}" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>`;
+  const [hx, hy] = pt(c, c, 33, facing), [lx, ly] = pt(c, c, 25, facing - 14), [rx, ry] = pt(c, c, 25, facing + 14);
+  s += `<polygon points="${hx},${hy} ${lx},${ly} ${rx},${ry}" fill="var(--accent)"/>`;
+  return s + `</svg>`;
+}
+
+// ---------- flags ----------
+function flagsFor(sp) {
+  const f = [];
+  Object.entries(sp.conf || {}).forEach(([k, v]) => { if (v === "low") f.push(`Low confidence: ${k}`); });
+  if (sp.type === "spear") {
+    const l = LEGAL[sp.id] || "";
+    if (/INSIDE:[^|]*\[no\]/.test(l)) f.push("Pin is inside a no-take zone");
+  }
+  if (/CHECK/.test(sp.access?.note || "")) f.push("Access point needs checking");
+  if ((sp.intel || []).every(i => !i.url)) f.push("No source link yet for local intel");
+  return f;
+}
+function legalHTML(sp) {
+  const l = LEGAL[sp.id]; if (!l) return "";
+  const status = l.split("| nearest:")[0].trim();
+  if (!status.startsWith("INSIDE")) return `<span class="legal ok">Not in a no-take zone</span>`;
+  const banned = /\[no\]/.test(status);
+  const zones = status.replace("INSIDE: ", "").replace(/\s*\[(no|ok|check)\]/g, "");
+  return banned ? `<span class="legal bad">No spearing: inside ${esc(zones)}</span>` : `<span class="legal ok">Not in a no-take zone</span> <span class="note-foot">(in ${esc(zones)})</span>`;
+}
+
+// ---------- render ----------
+const state = { type: "all", region: "all", flagged: false };
+REGIONS.forEach(r => { const o = document.createElement("option"); o.value = r; o.textContent = r; $("#regionSel").append(o); });
+
+function stats() {
+  const surf = SPOTS.filter(s => s.type === "surf").length, spear = SPOTS.filter(s => s.type === "spear").length;
+  const flagged = SPOTS.filter(s => flagsFor(s).length).length;
+  const perRegion = REGIONS.map(r => `${r}: ${SPOTS.filter(s => s.region === r && s.type === "surf").length} surf / ${SPOTS.filter(s => s.region === r && s.type === "spear").length} spear`).join("\n");
+  $("#stats").innerHTML = `
+    <div class="stat"><b>${surf}</b><span>surf spots</span></div>
+    <div class="stat"><b>${spear}</b><span>spear spots</span></div>
+    <div class="stat"><b>${REGIONS.length}</b><span>regions, all covered</span></div>
+    <div class="stat"><b>${flagged}</b><span>spots with something to check</span></div>`;
+  $("#stats").title = perRegion;
+}
+
+function sidesOf(sp) {
+  if (sp.type === "surf") return [{ name: "Surf window", facing: sp.facing,
+    swell: [[sp.surf.swellDir[0], sp.surf.swellDir[1], 1]], wind: [[sp.surf.offshore[0], sp.surf.offshore[1], 1]],
+    swellLabel: `Best swell ${rng(sp.surf.swellDir)}`, windLabel: `Offshore ${rng(sp.surf.offshore)}` }];
+  return sp.sides.map(sd => ({ name: sd.name, facing: sd.facing, swell: sd.shelterSwell, wind: sd.shelterWind,
+    swellLabel: "Sheltered from swell " + sd.shelterSwell.map(r => rng(r)).join(", "), windLabel: "Sheltered from wind " + sd.shelterWind.map(r => rng(r)).join(", ") }));
+}
+
+function ruleText(r) {
+  const w = r.when, bits = [];
+  if (w.swellDir) bits.push(`swell from ${rng(w.swellDir)}`);
+  if (w.swellMin) bits.push(`swell ≥ ${w.swellMin} m`);
+  if (w.swellMax) bits.push(`swell ≤ ${w.swellMax} m`);
+  if (w.periodMin) bits.push(`period ≥ ${w.periodMin} s`);
+  if (w.windDir) bits.push(`wind from ${rng(w.windDir)}`);
+  if (w.windMax && w.windMax < 90) bits.push(`wind ≤ ${w.windMax} kn`);
+  if (w.tide) bits.push(`tide ${w.tide}`);
+  const t = r.then, eff = [];
+  if (t.spear) eff.push(`spear ${t.spear > 0 ? "+" : ""}${t.spear}`);
+  if (t.surf) eff.push(`surf ${t.surf > 0 ? "+" : ""}${t.surf}`);
+  if (t.spearCap) eff.push(`spear capped at ${t.spearCap}`);
+  if (t.surfCap) eff.push(`surf capped at ${t.surfCap}`);
+  const local = /^https?:/.test(r.src || "") || /local/i.test(r.why);
+  return `<div class="rule"><div><b>${local ? "Local rule" : "Site rule"}:</b> ${esc(r.why)}</div><code>IF ${bits.join(" AND ") || "always"} → ${eff.join(", ")}</code></div>`;
+}
+
+function spotHTML(sp) {
+  const f = flagsFor(sp), legal = LEGAL[sp.id] || "";
+  const cls = ["spot", f.length ? "flagged" : "", /INSIDE:[^|]*\[no\]/.test(legal) ? "legal-bad" : ""].join(" ");
+  const maps = `<a href="https://www.google.com/maps/search/?api=1&query=${sp.lat},${sp.lon}" target="_blank" rel="noopener">Google Maps</a> · <a href="https://www.openstreetmap.org/?mlat=${sp.lat}&mlon=${sp.lon}#map=16/${sp.lat}/${sp.lon}" target="_blank" rel="noopener">OSM</a>`;
+  const sides = sidesOf(sp).map(sd => `<div>${compass(sd)}<div class="side-name">${esc(sd.name)} · faces ${card(sd.facing)}</div></div>`).join("");
+  const conf = Object.entries(sp.conf || {}).map(([k, v]) => `<span class="chip ${v}">${k}: ${v}</span>`).join("");
+  let rows = `
+    <dt>Pin</dt><dd class="mono">${sp.lat.toFixed(4)}, ${sp.lon.toFixed(4)} — ${maps}</dd>
+    <dt>Park / access</dt><dd>${esc(sp.access?.note)}</dd>
+    <dt>Overnight</dt><dd>${esc(sp.overnight)}</dd>
+    <dt>Terrain</dt><dd>${esc(sp.terrain)}</dd>`;
+  if (sp.type === "surf") {
+    const s = sp.surf;
+    rows += `
+    <dt>Faces</dt><dd>${card(sp.facing)} (${sp.facing}°)</dd>
+    <dt>Best swell</dt><dd>${rng(s.swellDir)}, ${s.size[0]}–${s.size[1]} ft (max ${s.maxSize} ft), period ≥ ${s.periodMin} s</dd>
+    <dt>Offshore wind</dt><dd>${rng(s.offshore)}</dd>
+    <dt>Tide</dt><dd>${s.tide.join(" / ")} (table ${sp.tide})</dd>
+    <dt>Extra shelter</dt><dd>${sp.shelterSwell.length ? "swell " + sp.shelterSwell.map(r => `${rng(r)} ${amt(r[2])}`).join(", ") : "—"}${sp.shelterWind.length ? "; wind " + sp.shelterWind.map(r => `${rng(r)} ${amt(r[2])}`).join(", ") : ""}</dd>`;
+  } else {
+    const p = sp.spear;
+    rows += `
+    <dt>Legal</dt><dd>${legalHTML(sp)}</dd>
+    <dt>Sides</dt><dd>${sp.sides.map(sd => `<b>${esc(sd.name)}</b> faces ${card(sd.facing)}; sheltered from swell ${sd.shelterSwell.map(r => `${rng(r)} ${amt(r[2])}`).join(", ")}; wind ${sd.shelterWind.map(r => `${rng(r)} ${amt(r[2])}`).join(", ")}`).join("<br>")}</dd>
+    <dt>Depth</dt><dd class="mono">${sp.depth[0]}–${sp.depth[1]} m</dd>
+    <dt>Entry / exit</dt><dd>${esc(p.entry)}</dd>
+    <dt>Unsafe when</dt><dd>swell reaching the spot &gt; <b>${p.unsafeAt} m</b> → automatic NO</dd>
+    <dt>Kingfish</dt><dd><span class="kf" aria-label="${p.kingfish} of 3">${"●".repeat(p.kingfish)}${"○".repeat(3 - p.kingfish)}</span> ${esc(p.kingfishNote)}</dd>
+    <dt>Visibility</dt><dd>${esc(p.vis)}</dd>
+    <dt>Species</dt><dd>${esc(p.species.join(", "))}</dd>
+    <dt>Runoff</dt><dd>${p.river ? `${esc(p.river.name)}, ${p.river.km} km (${p.river.size})` : "No river/lagoon close by"}</dd>
+    <dt>Tide</dt><dd>table ${sp.tide}; incoming/high scored as cleaner</dd>`;
+  }
+  rows += `<dt>Hazards</dt><dd>${esc(sp.hazards)}</dd>
+    <dt>Local intel</dt><dd>${(sp.intel || []).map(i => `${esc(i.text)} <span class="note-foot">— ${i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.src)}</a>` : esc(i.src)}</span>`).join("<br>")}</dd>`;
+  const rules = (sp.rules || []).length ? sp.rules.map(ruleText).join("") : `<div class="note-foot">No local rules yet — generic shelter rules apply.</div>`;
+  const r = store[sp.id] || {};
+  return `<article class="${cls}" id="${sp.id}">
+    <div class="compass-col">${sides}</div>
+    <div class="main">
+      <div class="head"><h3>${esc(sp.name)}</h3><div class="tags"><span class="tag type-${sp.type}">${sp.type.toUpperCase()}</span><span class="tag">${esc(sp.region)}</span></div></div>
+      <div class="conf">${conf}</div>
+      ${f.length ? `<ul class="flags">${f.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      <dl>${rows}</dl>
+      <div style="display:grid;gap:6px">${rules}</div>
+      <div class="review">
+        <div class="seg" role="group" aria-label="Review ${esc(sp.name)}">
+          <button type="button" data-id="${sp.id}" data-v="ok" aria-pressed="${r.v === "ok"}">Looks OK</button>
+          <button type="button" data-id="${sp.id}" data-v="fix" aria-pressed="${r.v === "fix"}">Needs fix</button>
+        </div>
+        <textarea id="note-${sp.id}" data-id="${sp.id}" placeholder="Notes (e.g. pin is wrong side, never heard of kings here)…" aria-label="Notes for ${esc(sp.name)}">${esc(r.n || "")}</textarea>
+      </div>
+    </div>
+  </article>`;
+}
+
+function render() {
+  const list = SPOTS.filter(s => (state.type === "all" || s.type === state.type) && (state.region === "all" || s.region === state.region) && (!state.flagged || flagsFor(s).length));
+  let html = "";
+  REGIONS.forEach(reg => {
+    const inReg = list.filter(s => s.region === reg); if (!inReg.length) return;
+    const su = inReg.filter(s => s.type === "surf").length, sp = inReg.filter(s => s.type === "spear").length;
+    html += `<div class="region-h"><h2>${esc(reg)}</h2><small>${su} surf · ${sp} spear</small></div>` + inReg.map(spotHTML).join("");
+  });
+  $("#list").innerHTML = html || `<p class="note-foot">Nothing matches these filters.</p>`;
+}
+
+function renderNotes() {
+  const lines = SPOTS.filter(s => store[s.id] && (store[s.id].v || store[s.id].n)).map(s => `- ${s.name} [${store[s.id].v === "ok" ? "OK" : store[s.id].v === "fix" ? "NEEDS FIX" : "note"}]${store[s.id].n ? ": " + store[s.id].n : ""}`);
+  const done = SPOTS.filter(s => store[s.id]?.v).length;
+  $("#notesOut").value = lines.length ? `Spot review (${done}/${SPOTS.length} marked)\n` + lines.join("\n") : "No marks yet.";
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.t) { state.type = b.dataset.t; b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }
+  else if (b.dataset.f) { state.flagged = b.dataset.f === "flagged"; b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }
+  else if (b.dataset.v) {
+    const id = b.dataset.id; store[id] = store[id] || {}; store[id].v = store[id].v === b.dataset.v ? null : b.dataset.v;
+    b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", store[id].v === x.dataset.v)); save();
+  }
+});
+document.addEventListener("input", e => { const t = e.target; if (t.matches("textarea[data-id]")) { const id = t.dataset.id; store[id] = store[id] || {}; store[id].n = t.value; save(); } });
+$("#regionSel").addEventListener("change", e => { state.region = e.target.value; render(); });
+$("#copyBtn").addEventListener("click", () => {
+  const txt = $("#notesOut").value;
+  navigator.clipboard.writeText(txt).then(() => $("#copyMsg").textContent = "Copied. Paste it into the chat.")
+    .catch(() => { $("#notesOut").select(); $("#copyMsg").textContent = "Copy didn't work here — the text is selected, copy it manually."; });
+});
+
+stats(); render(); renderNotes();
+</script>
