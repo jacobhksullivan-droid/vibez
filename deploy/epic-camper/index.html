@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seb &amp; Jacob's Epic Camper Adventure</title>
+<meta name="theme-color" content="#121d22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Epic Camper">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+<div class="gate" id="gate" hidden>
+  <form id="gateForm" class="gate-card">
+    <div class="brand">Seb &amp; Jacob's<br><span>Epic Camper Adventure</span></div>
+    <label for="gatePass">Passcode</label>
+    <input id="gatePass" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" required>
+    <button type="submit">Unlock</button>
+    <p id="gateMsg" role="status"></p>
+  </form>
+</div>
+<header class="topbar">
+  <div class="brand">Seb &amp; Jacob's<br><span>Epic Camper Adventure</span></div>
+  <div class="status" id="status" role="status">Loading forecast…</div>
+  <button class="iconbtn" id="refreshBtn" type="button" aria-label="Refresh forecast">↻</button>
+</header>
+<nav class="tabbar" aria-label="Views">
+  <button type="button" data-view="homeView" aria-pressed="true">Home</button>
+  <button type="button" data-view="mapView" aria-pressed="false">Map</button>
+  <button type="button" data-view="planView" aria-pressed="false">Plan</button>
+  <button type="button" data-view="listView" aria-pressed="false">List</button>
+</nav>
+
+<div class="controls" id="controls" hidden>
+  <select id="daySel" aria-label="Day"></select>
+  <div class="seg" id="modeSeg" aria-label="Show">
+    <button type="button" data-mode="both" aria-pressed="true">All</button>
+    <button type="button" data-mode="surf" aria-pressed="false" aria-label="Surf">🏄</button>
+    <button type="button" data-mode="spear" aria-pressed="false" aria-label="Spear">🐟</button>
+  </div>
+  <select id="winSel" aria-label="Time of day">
+    <option value="best">Best</option>
+  </select>
+</div>
+
+<main>
+  <section id="homeView" class="view scrollview"><div id="home" class="pad"></div></section>
+  <section id="mapView" class="view" hidden>
+    <div id="map" aria-label="Map of spots"></div>
+    <div class="legend" aria-hidden="true">
+      <span class="scale"><b style="background:var(--s1)">0</b><b style="background:var(--s3)">3</b><b style="background:var(--s5)">5</b><b style="background:var(--s7)">7</b><b style="background:var(--s9)">9</b></span>
+    </div>
+  </section>
+  <section id="outlookView" class="view scrollview" hidden><div id="outlook" class="pad"></div></section>
+  <section id="planView" class="view scrollview" hidden><div id="plan" class="pad"></div></section>
+  <section id="listView" class="view" hidden>
+    <div id="list" class="list"></div>
+  </section>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-inner">
+    <button class="iconbtn close" id="sheetClose" type="button" aria-label="Close">✕</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+
+<p class="disclaimer">Decision support only · check conditions yourself · dive one-up-one-down</p>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="src/gate.js"></script>
+</body>
+</html>

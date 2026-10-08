@@ -1,6 +1,7 @@
 // Live data the phones can't fetch directly (no CORS): shark activity (NSW SharkSmart map feeds),
 // BOM coastal waters forecast + warnings, and BOM wind observations. Cached at Netlify's edge for 10 min.
 // GET /api/live?st=95749,95770,...   (st = BOM station ids for wind obs)
+// Runs on Netlify (this file) and on Vercel (api/live.mjs re-exports it).
 
 const UA = { "User-Agent": "Mozilla/5.0 (EpicCamper trip app)" };
 const SHARK_FEEDS = ["VR4G2", "SLSNSW2", "DPINSW", "SSPRO2", "TRAUMA", "EVENTS"];
@@ -73,12 +74,12 @@ async function obs(ids, hist) {
 export default async (req) => {
   const q = new URL(req.url).searchParams;
   const ids = (q.get("st") || "").split(",").filter(x => /^\d{4,6}$/.test(x)).slice(0, 30);
-  if (q.get("only") === "obs") return new Response(JSON.stringify({ at: Date.now(), obs: await obs(ids, true) }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=600", "netlify-cdn-cache-control": "public, durable, max-age=1200" } });
+  if (q.get("only") === "obs") return new Response(JSON.stringify({ at: Date.now(), obs: await obs(ids, true) }), { headers: { "content-type": "application/json", "cache-control": "public, max-age=600, s-maxage=1200", "netlify-cdn-cache-control": "public, durable, max-age=1200" } });
   const [s, b, o] = await Promise.all([sharks().catch(() => null), bom().catch(() => null), obs(ids, false).catch(() => ({}))]);
   return new Response(JSON.stringify({ at: Date.now(), sharks: s, bom: b, obs: o }), {
     headers: {
       "content-type": "application/json",
-      "cache-control": "public, max-age=300",
+      "cache-control": "public, max-age=300, s-maxage=600, stale-while-revalidate=600",
       "netlify-cdn-cache-control": "public, durable, max-age=600, stale-while-revalidate=600",
     },
   });

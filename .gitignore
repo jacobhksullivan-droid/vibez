@@ -1,7 +1,7 @@
 # secrets — never commit
 tools/passcode.txt
-# build output (made by tools/build_site.py)
-deploy/
+# build output: deploy/epic-camper IS committed (Vercel serves it); only the zip is ignored
+deploy/*.zip
 # local / machine files
 .claude/
 .DS_Store
