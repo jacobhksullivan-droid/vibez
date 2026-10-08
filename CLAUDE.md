@@ -16,17 +16,19 @@
 ## Key dates
 - Today when this was written: 8 Oct 2026. Core due live on both iPhones by **15 Oct**. Seb arrives **16 Oct** (little time for fixes after). Trip **21–31 Oct 2026** (pick-up Bankstown 9am 21 Oct, drop-off Bankstown 2pm 31 Oct).
 
-## Hosting / deploy (Netlify — NOT Vercel)
-- Live: https://seb-jacob-epic-camper.netlify.app — site id `6cfacfc8-e847-4e55-8528-64e5068519a4`.
-- Node + netlify-cli are installed at `~/.local/node/node-v24.21.0-darwin-arm64/bin` (not on PATH by default); CLI already logged in to Jacob's account.
+## Hosting / deploy (Vercel via GitHub — Netlify is out of free deploy credits)
+- Live: **https://jacob-camping-trip.vercel.app** — Vercel project connected by Jacob to GitHub repo `jacobhksullivan-droid/vibez` (PUBLIC repo; branch `main`). Every push to `main` auto-deploys.
+- Vercel serves `deploy/epic-camper` (see `vercel.json`, `outputDirectory`), which is COMMITTED. `/api/live` = `api/live.mjs` (re-exports `netlify/functions/live.mjs`).
 - Deploy after every change:
   ```bash
   python3 tools/build_site.py
-  PATH="$HOME/.local/node/node-v24.21.0-darwin-arm64/bin:$PATH" netlify deploy --prod --no-build --dir deploy/epic-camper --functions netlify/functions --site 6cfacfc8-e847-4e55-8528-64e5068519a4
+  git add -A && git commit -m "…" && git push
   ```
-  Then verify with curl: pages 200, `data/spots.js` and `data/tides.js` must 404 (they ship encrypted in `data/secure.bin`), and decrypt `data/secure.bin` with `openssl enc -d -aes-256-cbc -pbkdf2 -iter 150000 -md sha256 -pass file:tools/passcode.txt`.
-- Passcode gate: client-side AES (Netlify password protection is paid). Passcode is in `tools/passcode.txt` (git-ignored — never commit it). Never type it into the live site yourself.
-- Never change Netlify security/account settings yourself — ask Jacob to click them (he switched off "Visitor access" protection himself).
+  Then verify with curl on the Vercel URL: pages 200, `data/spots.js` and `data/tides.js` must 404, `/api/live` 200, and decrypt `data/secure.bin` with `openssl enc -d -aes-256-cbc -pbkdf2 -iter 150000 -md sha256 -pass file:tools/passcode.txt`.
+- git push auth: GitHub CLI at `~/.local/gh/gh` (logged in as jacobhksullivan-droid, set up as git credential helper).
+- Old Netlify site https://seb-jacob-epic-camper.netlify.app (site id `6cfacfc8-e847-4e55-8528-64e5068519a4`) is frozen: "Account credit usage exceeded – new deploys are blocked". Don't deploy there.
+- Passcode gate: client-side AES. Passcode is in `tools/passcode.txt` (git-ignored — never commit it). Never type it into the live site yourself.
+- Never change hosting security/account settings yourself — ask Jacob to click them.
 
 ## Local preview
 - `.claude/launch.json` config `coast-call` runs `tools/devserver.py` (no-cache) on port 8765; `deploy-test` serves the built folder on 8767 (`?gate` shows the passcode screen locally).

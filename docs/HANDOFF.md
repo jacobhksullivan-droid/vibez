@@ -122,3 +122,6 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
 - 9 Oct: tab bar moved to the TOP (under the header) — Jacob said the bottom tabs were covered on his phone ("powered by Netlify" bar). Spot sheet: Ocean swell / Wind / Drive boxes removed (only Vis remains for spear); shark activity is a collapsed one-liner (<details>).
 - 9 Oct: spot sheet header trimmed — no reason line under the name (only the red "Unsafe" line when it applies), Best line shows just the time block, Vis box removed.
 - 9 Oct: all Directions links use Apple Maps (`dirUrl` → maps.apple.com ?daddr=…&dirflg=d). Tide scrub label fixed for the dark theme (lime box, dark text) — it was white-on-white.
+
+## 17. Hosting moved to Vercel (9 Oct 2026)
+- Netlify blocked deploys (free credits used up). Jacob pushed the project to GitHub (public repo jacobhksullivan-droid/vibez) and connected Vercel → https://jacob-camping-trip.vercel.app. Built folder deploy/epic-camper is committed; vercel.json points Vercel at it; api/live.mjs serves /api/live. passcode.txt is git-ignored and was scrubbed from docs.
