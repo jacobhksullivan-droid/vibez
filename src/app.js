@@ -345,7 +345,6 @@ function openSheet(id, winLabel) {
     ${legal ? `<p class="warn">No spearing: inside ${esc(legal)}</p>` : ""}
     ${win.no ? `<p class="no">${esc(win.no)}</p>` : ""}
     ${best}${sharks}
-    <div class="wins" role="group" aria-label="Time of day">${wins}</div>
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
     ${table}
     <div class="tidebox"><small>Tide</small>${tideGraph(s, fcs, state.day, win)}</div>
