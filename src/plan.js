@@ -2,7 +2,8 @@
 //  21–25: Jacob + Seb — best surf + spearing (spearing counts a bit more). Night 1 is always a powered site (charge the van).
 //  26–30: the other two join (meet them wherever suits) — same goal: the best surf + spearing for Jacob + Seb.
 //  31: morning session, back at Bankstown by 2pm.
-// Both coasts (2+ nights each) unless one is terrible for the whole forecast. Never more than 2 nights in any one area (30 km) over the whole trip, unless the forecast there is insane (a 9+ session).
+// Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per area (30 km; a 3rd only if
+// the forecast there is insane, a 9+ session) and never back to an area once you've left it.
 // Every night's camp is picked together (beam search over routes) so the sessions around it score as high
 // as possible, minus the cost of driving. Days: morning session near last night's camp → drive → arvo session near tonight's.
 // Uses the forecast where it reaches; days it doesn't reach yet use each spot's base quality. Re-plans on every refresh.
@@ -91,8 +92,8 @@ export function makePlan(dayResults) {
   if (!need.N && !need.S) { need.N = 2; need.S = 2; } // both bad: still split it
   const short = (nN, nS) => Math.max(0, need.N - nN) + Math.max(0, need.S - nS);
 
-  // Beam search over routes (keeps the best few hundred part-routes each night). A route may spend at most 2 nights in
-  // any one area (camps within 30 km) over the whole trip — a 3rd only when the forecast there is insane.
+  // Beam search over routes (keeps the best few hundred part-routes each night). Stay 1 or 2 nights in an area (camps
+  // within 30 km) — a 3rd only when the forecast there is insane — and never go back to an area you've already left.
   const AREA_KM = 30, BEAM = 400, PER_CAMP = 3;
   const near = camps.map(a => camps.map(b => km(a, b) < AREA_KM));
   const side = camps.map(sideOf);
@@ -110,8 +111,12 @@ export function makePlan(dayResults) {
         if (k === K - 1 && home[j] > LAST_MAX) continue;
         const drive = D[i][j]; if (drive > MAX_MOVE) continue;
         if (camps[j].kind === "rest" && km(camps[i], camps[j]) < 3) continue; // rest areas: one night only (incl. the other side of the road)
-        let nights = 0; for (const x of p.r) if (near[x][j]) nights++;
-        if (nights >= 2 && !insane[k][j]) continue;
+        // stay 1 or 2 nights in an area (3rd only if insane), and never come back to an area once you've left it
+        let t = p.r.length - 1, streak = 0;
+        while (t >= 0 && near[p.r[t]][j]) { streak++; t--; }
+        if (streak >= 2 && !insane[k][j]) continue;
+        let back = false; for (let x = 0; x <= t; x++) if (near[p.r[x]][j]) { back = true; break; }
+        if (back) continue;
         const nN = p.nN + (side[j] === "N" ? 1 : 0), nS = p.nS + (side[j] === "S" ? 1 : 0);
         if (short(nN, nS) > K - 1 - k) continue; // can't fit both coasts in any more
         next.push({ p, j, nN, nS, v: p.v - DRIVE_COST * drive / 60 + val[k][j] });
@@ -133,21 +138,25 @@ export function makePlan(dayResults) {
   // spell the days out
   const days = [];
   let covered = 0;
+  // a spot already used at an earlier stop isn't used again (same stop, next day is fine)
+  const usedAt = new Map(), stopOf = route.map((r, k) => { let t = k; while (t > 0 && near[route[t - 1]][r]) t--; return t; });
+  const fresh = (list, k) => list.filter(x => !usedAt.has(x.id) || usedAt.get(x.id) === stopOf[k]);
+  const use = (x, k) => { if (x && !usedAt.has(x.id)) usedAt.set(x.id, stopOf[k]); return x; };
   NIGHTS.forEach((d, k) => {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
     const out = [], notes = [];
-    const am = prev && sessions(prev.near, resFor[d], MORNING, 35)[0];
+    const am = prev && use(fresh(sessions(prev.near, resFor[d], MORNING, 35), k - 1)[0], k - 1);
     if (am) out.push({ when: "Morning", ...am });
     if (k === 0) notes.push("Pick up the van in Bankstown at 9am.");
-    const pm = sessions(c.near, resFor[d], ARVO, 45).find(x => x.id !== am?.id);
+    const pm = use(fresh(sessions(c.near, resFor[d], ARVO, 45), k).find(x => x.id !== am?.id), k);
     if (pm) out.push({ when: "Arvo", ...pm });
     days.push({ day: d, who: d < TRIP.meet ? "You + Seb" : "All four", forecast: !!resFor[d], sessions: out, notes, camp: c, power: k === 0,
       drive: k === 0 ? home[route[k]] : D[route[k - 1]][route[k]], from: k === 0 ? TRIP.home.name : null });
   });
   // last day: morning session, then the van back by 2pm
   const last = camps[route[K - 1]], backMin = home[route[K - 1]];
-  const am = sessions(last.near, resFor[TRIP.end], MORNING, 35)[0];
+  const am = fresh(sessions(last.near, resFor[TRIP.end], MORNING, 35), K - 1)[0];
   const leaveMin = Math.floor((TRIP.dropOff * 60 - backMin - 20) / 15) * 15, lh = Math.floor(leaveMin / 60), lm = leaveMin % 60;
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
