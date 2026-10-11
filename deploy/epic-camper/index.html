@@ -4,14 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Seb &amp; Jacob's Epic Camper Adventure</title>
-<meta name="theme-color" content="#121d22">
+<meta name="theme-color" content="#8d93d8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Epic Camper">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -33,12 +30,6 @@
   <div class="status" id="status" role="status">Loading forecast…</div>
   <button class="iconbtn" id="refreshBtn" type="button" aria-label="Refresh forecast">↻</button>
 </header>
-<nav class="tabbar" aria-label="Views">
-  <button type="button" data-view="homeView" aria-pressed="true">Home</button>
-  <button type="button" data-view="mapView" aria-pressed="false">Map</button>
-  <button type="button" data-view="planView" aria-pressed="false">Plan</button>
-  <button type="button" data-view="listView" aria-pressed="false">List</button>
-</nav>
 
 <div class="controls" id="controls" hidden>
   <select id="daySel" aria-label="Day"></select>
@@ -53,7 +44,7 @@
 </div>
 
 <main>
-  <section id="homeView" class="view scrollview"><div id="home" class="pad"></div></section>
+  <section id="homeView" class="view scrollview"><div id="home" class="pad"></div><p class="disclaimer">Decision support only · check conditions yourself · dive one-up-one-down</p></section>
   <section id="mapView" class="view" hidden>
     <div id="map" aria-label="Map of spots"></div>
     <div class="legend" aria-hidden="true">
@@ -66,6 +57,12 @@
     <div id="list" class="list"></div>
   </section>
 </main>
+<nav class="tabbar" aria-label="Views">
+  <button type="button" data-view="homeView" aria-pressed="true" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+  <button type="button" data-view="mapView" aria-pressed="false" aria-label="Map" title="Map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg><span>Map</span></button>
+  <button type="button" data-view="planView" aria-pressed="false" aria-label="Plan" title="Plan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4"/></svg><span>Plan</span></button>
+  <button type="button" data-view="listView" aria-pressed="false" aria-label="List" title="List"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="4.75" cy="7" r=".9"/><circle cx="4.75" cy="12" r=".9"/><circle cx="4.75" cy="17" r=".9"/></svg><span>List</span></button>
+</nav>
 
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-inner">
@@ -75,7 +72,6 @@
 </div>
 
 
-<p class="disclaimer">Decision support only · check conditions yourself · dive one-up-one-down</p>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="src/gate.js"></script>
