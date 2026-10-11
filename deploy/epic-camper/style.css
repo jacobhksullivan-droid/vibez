@@ -443,11 +443,3 @@ a { color: #fff; }
 body { text-shadow: none; }
 .badge, .pin, .chip[aria-selected="true"], .seg button[aria-pressed="true"], .go, .gate-card input, .gate-card button, .legend .scale b { text-shadow: none; }
 .iconbtn { color: #fff; }
-/* Ask tab */
-.hcard.askcard { display: grid; grid-template-columns: 1fr; gap: 10px; cursor: default; }
-#askQ { width: 100%; resize: vertical; min-height: 84px; font: 16px/1.4 var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; }
-#askQ::placeholder { color: var(--muted); }
-.askideas { display: flex; flex-wrap: wrap; gap: 6px; }
-.askideas .chip { white-space: normal; max-width: 100%; font: 500 .8rem/1.25 var(--body); padding: 7px 10px; border: 1px solid var(--line); text-align: left; cursor: pointer; }
-.askcard .go { padding: 12px; border: 0; font-size: 1rem; cursor: pointer; }
-.tabbar button { width: 54px; }

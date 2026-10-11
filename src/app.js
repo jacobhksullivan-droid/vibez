@@ -11,7 +11,6 @@ import { renderHome } from "./home.js";
 import { rankCamps, campsNear, KIND, facilities, CAMPS, DUMPS } from "./camps.js";
 import { makePlan } from "./plan.js";
 import { renderOutlook, regionBounds } from "./outlook.js";
-import { renderAsk, buildPrompt, ask } from "./ask.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -387,7 +386,6 @@ function renderAll() {
   else if (state.view === "outlookView") renderOutlookView();
   else if (state.view === "planView") renderPlan();
   else if (state.view === "mapView") renderMap();
-  else if (state.view === "askView") { if (!$("#askQ")) $("#ask").innerHTML = renderAsk(esc); }
   else renderList();
   if (state.open) openSheet(state.open, state.openWin);
 }
@@ -442,20 +440,6 @@ document.addEventListener("click", async e => {
   else if (b.dataset.day) { state.day = b.dataset.day; renderAll(); }
   else if (b.dataset.mode) { state.mode = b.dataset.mode; b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderAll(); }
   else if (b.dataset.view) showView(b.dataset.view);
-  else if (b.dataset.ask) { $("#askQ").value = b.dataset.ask; $("#askQ").focus(); }
-  else if (b.id === "askGo") {
-    const q = $("#askQ").value.trim();
-    if (!q) { $("#askQ").focus(); return; }
-    if (!state.data) { $("#askMsg").textContent = "Forecast still loading — try again in a sec."; return; }
-    const today = todayStr(), tom = state.days[state.days.indexOf(today) + 1];
-    let camps = [], plan = null;
-    try { camps = tom ? campsFor(tom).slice(0, 3) : []; } catch (err) {}
-    try { plan = makePlan(dayResults); } catch (err) {}
-    const prompt = buildPrompt(q, { today, days: state.days, dayResults, bestOf, spots: SPOTS, drive: state.drive, warnings: warnings(),
-      sharky: s => sharksNear(s.lat, s.lon, 5, Date.now() - 48 * 36e5).length > 0, camps, plan });
-    ask(prompt);
-    $("#askMsg").textContent = "Opening Claude… (the question + forecast is also copied — paste it in if the box is empty).";
-  }
   else if (b.dataset.win) openSheet(state.open, b.dataset.win);
 });
 $("#sheetClose").addEventListener("click", () => { $("#sheet").hidden = true; state.open = null; state.openWin = null; });
