@@ -1,9 +1,9 @@
 // Trip plan, 21–31 Oct. One plan, no options; anywhere on the coast.
-//  21–25: Jacob + Seb — best surf + spearing (spearing counts a bit more). Night 1 is always a powered site (charge the van).
+//  21–25: Jacob + Seb — best surf + spearing (counted equally). Night 1 is always a powered site (charge the van).
 //  26–30: the other two join (meet them wherever suits) — same goal: the best surf + spearing for Jacob + Seb.
 //  31: morning session, back at Bankstown by 2pm.
-// Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per area (30 km; a 3rd only if
-// the forecast there is insane, a 9+ session) and never back to an area once you've left it.
+// Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per place (camps within 5 km; a 3rd only if
+// the forecast there is insane, a 9+ session) and never back to a place once you've left it, nor to a spot already done.
 // Every night's camp is picked together (beam search over routes) so the sessions around it score as high
 // as possible, minus the cost of driving. Every day = one surf + one dive: morning near last night's camp → drive → arvo near tonight's.
 // Uses the forecast where it reaches; days it doesn't reach yet use each spot's base quality. Re-plans on every refresh.
@@ -18,7 +18,7 @@ const km = (a, b) => Math.hypot((a.lat - b.lat) * 111, (a.lon - b.lon) * 111 * M
 // longer legs use the highway (1.25× at ~80 km/h); +15% for the van
 export const driveMin = (a, b) => { const d = km(a, b); return Math.round((d < 40 ? (d * 1.35) / 50 : (d * 1.25) / 80) * 60 * 1.15); };
 
-const SPEAR_BONUS = 0.6;   // lean towards spearing (on the 0–10 scale)
+const SPEAR_BONUS = 0;     // surf and spearing count equally (Jacob, 11 Oct)
 const DRIVE_COST = 0.7;    // points per hour of driving between camps
 const MAX_MOVE = 240;                             // minutes of driving between camps
 const FIRST_MAX = 240, LAST_MAX = 150; // Bankstown → night 1; night 30 → Bankstown
@@ -49,13 +49,6 @@ function sessions(near, res, labels, max) {
   }
   return out.sort((a, b) => b.v - a.v);
 }
-// how good a block of sessions is: we want to surf AND spear every day, so a camp is worth the average of its best
-// surf and best dive (a missing one costs 3 points)
-function blockValue(list) {
-  const surf = list.find(x => x.type === "surf"), spear = list.find(x => x.type === "spear");
-  if (!surf && !spear) return 0;
-  return ((surf ? surf.v : (spear.v - 3)) + (spear ? spear.v : (surf.v - 3))) / 2;
-}
 // one surf + one dive a day: whichever order (morning/arvo) scores better
 function pickDay(amList, pmList) {
   const top = (l, t, not) => l.find(x => x.type === t && x.id !== not);
@@ -75,12 +68,19 @@ export function makePlan(dayResults) {
   const camps = CAMPS.filter(c => c.near.some(([, m]) => m <= 35));
   const n = camps.length, K = NIGHTS.length;
 
-  // value of sleeping at camp i on night k = arvo session that day near it + next morning's session near it (+ camp comfort)
-  const val = NIGHTS.map(d => camps.map(c => {
-    const nd = nextDay(d);
-    return blockValue(sessions(c.near, resFor[d], ARVO, 45)) + blockValue(sessions(c.near, resFor[nd], MORNING, 35))
-      + KBONUS[c.kind] - (c.dirt ? 0.8 : 0);
-  }));
+  // sessions around each camp each night: the arvo near it, and the next morning near it (surf / dive lists, best first)
+  const split = l => ({ surf: l.filter(x => x.type === "surf"), spear: l.filter(x => x.type === "spear") });
+  const AR = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[d], ARVO, 45))));
+  const MO = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[nextDay(d)], MORNING, 35))));
+  const bonus = camps.map(c => KBONUS[c.kind] - (c.dirt ? 0.8 : 0));
+  // value of a block (surf + dive average; a missing one costs 3) skipping spots already done at earlier stops
+  const firstFree = (l, X) => { for (const x of l) if (!X.has(x.id)) return x; return null; };
+  function blockFree(b, X) {
+    const su = firstFree(b.surf, X), sp = firstFree(b.spear, X);
+    if (!su && !sp) return { v: 0, ids: [] };
+    return { v: ((su ? su.v : sp.v - 3) + (sp ? sp.v : su.v - 3)) / 2, ids: [su?.id, sp?.id].filter(Boolean) };
+  }
+  const nightVal = (k, j, X) => { const a = blockFree(AR[k][j], X), m = blockFree(MO[k][j], X); return { v: a.v + m.v + bonus[j], ids: [...a.ids, ...m.ids] }; };
   // a 3rd night in one area is only allowed when the forecast there is insane
   const INSANE = 9;
   const insane = NIGHTS.map(d => camps.map(c => {
@@ -104,16 +104,18 @@ export function makePlan(dayResults) {
   if (!need.N && !need.S) { need.N = 2; need.S = 2; } // both bad: still split it
   const short = (nN, nS) => Math.max(0, need.N - nN) + Math.max(0, need.S - nS);
 
-  // Beam search over routes (keeps the best few hundred part-routes each night). Stay 1 or 2 nights in an area (camps
-  // within 30 km) — a 3rd only when the forecast there is insane — and never go back to an area you've already left.
-  const AREA_KM = 30, BEAM = 400, PER_CAMP = 3;
+  // Beam search over routes (keeps the best few hundred part-routes each night). Stay 1 or 2 nights in a place (camps
+  // within 5 km) — a 3rd only when the forecast there is insane — and never go back to a place you've already left.
+  const AREA_KM = 5, BEAM = 400, PER_CAMP = 3; // "same place" = camps within 5 km (e.g. two Seal Rocks camps)
   const near = camps.map(a => camps.map(b => km(a, b) < AREA_KM));
   const side = camps.map(sideOf);
   let beam = [];
   camps.forEach((c, i) => {
     if (home[i] > FIRST_MAX || !powered(c)) return;
     const nN = side[i] === "N" ? 1 : 0, nS = side[i] === "S" ? 1 : 0;
-    if (short(nN, nS) <= K - 1) beam.push({ r: [i], v: val[0][i] - DRIVE_COST * home[i] / 60, nN, nS });
+    if (short(nN, nS) > K - 1) return;
+    const nv = nightVal(0, i, new Set());
+    beam.push({ r: [i], v: nv.v - DRIVE_COST * home[i] / 60, nN, nS, used: new Set(), cur: new Set(nv.ids), anchor: i, streak: 1, past: [] });
   });
   for (let k = 1; k < K; k++) {
     const next = [];
@@ -123,15 +125,16 @@ export function makePlan(dayResults) {
         if (k === K - 1 && home[j] > LAST_MAX) continue;
         const drive = D[i][j]; if (drive > MAX_MOVE) continue;
         if (camps[j].kind === "rest" && km(camps[i], camps[j]) < 3) continue; // rest areas: one night only (incl. the other side of the road)
-        // stay 1 or 2 nights in an area (3rd only if insane), and never come back to an area once you've left it
-        let t = p.r.length - 1, streak = 0;
-        while (t >= 0 && near[p.r[t]][j]) { streak++; t--; }
-        if (streak >= 2 && !insane[k][j]) continue;
-        let back = false; for (let x = 0; x <= t; x++) if (near[p.r[x]][j]) { back = true; break; }
-        if (back) continue;
+        // a stop = camps within 5 km of where it started. Stay 1 or 2 nights (3rd only if insane); never return to an earlier stop
+        const stay = near[p.anchor][j];
+        if (stay && p.streak >= 2 && !insane[k][j]) continue;
+        if (!stay && p.past.some(a => near[a][j])) continue;
         const nN = p.nN + (side[j] === "N" ? 1 : 0), nS = p.nS + (side[j] === "S" ? 1 : 0);
         if (short(nN, nS) > K - 1 - k) continue; // can't fit both coasts in any more
-        next.push({ p, j, nN, nS, v: p.v - DRIVE_COST * drive / 60 + val[k][j] });
+        // spots done at earlier stops are off the list; staying put you can redo this stop's spots
+        const X = stay ? p.used : new Set([...p.used, ...p.cur]);
+        const nv = nightVal(k, j, X);
+        next.push({ p, j, nN, nS, stay, X, ids: nv.ids, v: p.v - DRIVE_COST * drive / 60 + nv.v });
       }
     }
     next.sort((a, b) => b.v - a.v);
@@ -139,7 +142,9 @@ export function makePlan(dayResults) {
     for (const x of next) {
       const key = `${x.j}|${Math.min(x.nN, 2)}|${Math.min(x.nS, 2)}`;
       const c = per.get(key) || 0; if (c >= PER_CAMP) continue;
-      per.set(key, c + 1); beam.push({ r: [...x.p.r, x.j], v: x.v, nN: x.nN, nS: x.nS });
+      per.set(key, c + 1);
+      beam.push({ r: [...x.p.r, x.j], v: x.v, nN: x.nN, nS: x.nS, used: x.X, cur: x.stay ? new Set([...x.p.cur, ...x.ids]) : new Set(x.ids),
+        anchor: x.stay ? x.p.anchor : x.j, streak: x.stay ? x.p.streak + 1 : 1, past: x.stay ? x.p.past : [...x.p.past, x.p.anchor] });
       if (beam.length >= BEAM) break;
     }
     if (!beam.length) return { days: [], covered: 0 };
@@ -151,8 +156,11 @@ export function makePlan(dayResults) {
   const days = [];
   let covered = 0;
   // a spot already used at an earlier stop isn't used again (same stop, next day is fine)
-  const usedAt = new Map(), stopOf = route.map((r, k) => { let t = k; while (t > 0 && near[route[t - 1]][r]) t--; return t; });
-  const fresh = (list, k) => list.filter(x => !usedAt.has(x.id) || usedAt.get(x.id) === stopOf[k]);
+  const stopOf = []; route.forEach((r, k) => { stopOf.push(k && near[route[stopOf[k - 1]]][r] ? stopOf[k - 1] : k); });
+  const usedAt = new Map();
+  // (and while staying, a spot already done costs a point so a near-equal different spot wins)
+  const fresh = (list, k) => list.filter(x => !usedAt.has(x.id) || usedAt.get(x.id) === stopOf[k])
+    .map(x => (usedAt.has(x.id) ? { ...x, v: x.v - 1 } : x)).sort((a, b) => b.v - a.v);
   const use = (x, k) => { if (x && !usedAt.has(x.id)) usedAt.set(x.id, stopOf[k]); return x; };
   NIGHTS.forEach((d, k) => {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
