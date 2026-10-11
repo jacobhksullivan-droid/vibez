@@ -443,3 +443,5 @@ a { color: #fff; }
 body { text-shadow: none; }
 .badge, .pin, .chip[aria-selected="true"], .seg button[aria-pressed="true"], .go, .gate-card input, .gate-card button, .legend .scale b { text-shadow: none; }
 .iconbtn { color: #fff; }
+.pleg { font: 600 .82rem var(--body); color: var(--muted); margin: 18px 2px 0; }
+.pday.social { border-left: 1px solid var(--glass-edge); }

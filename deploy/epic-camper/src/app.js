@@ -256,17 +256,23 @@ function renderPlan() {
   const P = makePlan(dayResults);
   const dname = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
   const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
+  const easyTag = x => (x.easy === "learn" ? " · easy waves" : x.easy === "snorkel" ? " · easy snorkel" : "");
   const sess = (x, day) => `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
-      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}</small></span></button>`;
-  const days = P.days.map(e => `<article class="pday core">
+      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}${day >= "2026-10-26" ? easyTag(x) : ""}</small></span></button>`;
+  const days = P.days.map(e => {
+    const am = e.sessions.filter(x => x.when === "Morning"), pm = e.sessions.filter(x => x.when !== "Morning");
+    const legStart = e.day === "2026-10-26" ? `<h3 class="pleg">All four · 26–31 Oct</h3>` : "";
+    return `${legStart}<article class="pday ${e.who === "You + Seb" ? "core" : "social"}">
       <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>rough · forecast not out yet</em>`}</header>
-      ${e.sessions.map(x => sess(x, e.day)).join("")}
+      ${am.map(x => sess(x, e.day)).join("")}
+      ${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
+      ${pm.map(x => sess(x, e.day)).join("")}
       ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
-      ${e.toSydney ? `<p class="pnote">Then Sydney to meet the others · ${mins(e.toSydney)}</p>` : ""}
-    </article>`).join("");
+    </article>`;
+  }).join("");
   $("#plan").innerHTML = `<section class="hsec"><h2>You + Seb · 21–25 Oct</h2>
-    <small class="hint">Updates itself with every forecast.</small></section>${days}`;
+    <small class="hint">Updates itself with every forecast. Days the forecast doesn't reach yet use each spot's base quality.</small></section>${days}`;
 }
 
 // ---------- spot sheet ----------
