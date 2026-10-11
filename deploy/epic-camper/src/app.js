@@ -256,13 +256,12 @@ function renderPlan() {
   const P = makePlan(dayResults);
   const dname = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
   const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
-  const easyTag = x => (x.easy === "learn" ? " · easy waves" : x.easy === "snorkel" ? " · easy snorkel" : "");
   const sess = (x, day) => `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
-      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}${day >= "2026-10-26" ? easyTag(x) : ""}</small></span></button>`;
+      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}</small></span></button>`;
   const days = P.days.map(e => {
     const am = e.sessions.filter(x => x.when === "Morning"), pm = e.sessions.filter(x => x.when !== "Morning");
-    const legStart = e.day === "2026-10-26" ? `<h3 class="pleg">All four · 26–31 Oct</h3>` : "";
+    const legStart = e.day === "2026-10-26" ? `<h3 class="pleg">The others join · 26–31 Oct</h3>` : "";
     return `${legStart}<article class="pday ${e.who === "You + Seb" ? "core" : "social"}">
       <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>rough · forecast not out yet</em>`}</header>
       ${am.map(x => sess(x, e.day)).join("")}

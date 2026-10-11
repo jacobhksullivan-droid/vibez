@@ -1,9 +1,9 @@
 // Trip plan, 21–31 Oct. One plan, no options; anywhere on the coast.
 //  21–25: Jacob + Seb — best surf + spearing (spearing counts a bit more). Night 1 is always a powered site (charge the van).
-//  26: dawn session, then Sydney to pick up the other two (~lunch), then drive to the next camp.
-//  26–30: all four — the mates don't surf/spear yet, so easy waves + calm snorkelling count extra, and comfier camps.
+//  26–30: the other two join (meet them wherever suits) — same goal: the best surf + spearing for Jacob + Seb.
 //  31: morning session, back at Bankstown by 2pm.
-// Every night's camp is picked together (dynamic programming over all camps) so the sessions around it score as high
+// Never more than 2 nights in any one area (30 km) over the whole trip, unless the forecast there is insane (a 9+ session).
+// Every night's camp is picked together (beam search over routes) so the sessions around it score as high
 // as possible, minus the cost of driving. Days: morning session near last night's camp → drive → arvo session near tonight's.
 // Uses the forecast where it reaches; days it doesn't reach yet use each spot's base quality. Re-plans on every refresh.
 import { SPOTS } from "../data/spots.js";
@@ -19,13 +19,12 @@ export const driveMin = (a, b) => { const d = km(a, b); return Math.round((d < 4
 
 const SPEAR_BONUS = 0.6;   // lean towards spearing (on the 0–10 scale)
 const DRIVE_COST = 0.7;    // points per hour of driving between camps
-const MAX_MOVE = 240, SOCIAL_MOVE = 180;          // minutes of driving between camps (core / with the mates)
-const FIRST_MAX = 240, MEET_MAX = 180, FROM_SYD = 210, LAST_MAX = 150; // Bankstown → night 1; night 25 → Sydney; Sydney → night 26; night 30 → Bankstown
+const MAX_MOVE = 240;                             // minutes of driving between camps
+const FIRST_MAX = 240, LAST_MAX = 150; // Bankstown → night 1; night 30 → Bankstown
 const KBONUS = { free: 0.5, rest: 0.5, npws: 0.3, camp: 0.3, park: 0 };
 const MORNING = ["Dawn", "Morning"], ARVO = ["Midday", "Arvo", "Evening"];
 
 const dayHas = (dayResults, day) => { try { const r = dayResults(day); return r && Object.values(r).some(Boolean); } catch (e) { return false; } };
-const social = (day, part) => day > TRIP.meet || (day === TRIP.meet && part === "arvo");
 
 function win(r, labels) {
   const ws = r?.windows.filter(w => labels.includes(w.label) && w.score != null) || [];
@@ -37,17 +36,14 @@ function win(r, labels) {
 const usual = s => (s.type === "spear" ? 5 + (s.spear?.kingfish ?? 0) : 6 + 2 * (s.surf?.quality ?? 0));
 
 // sessions near a camp for a day, best first: { id, name, type, easy, min, score, no, label, forecast, v }
-// social = the mates are along: easy waves / calm snorkelling get a bump, big surf a penalty
-function sessions(near, res, labels, max, soc) {
+function sessions(near, res, labels, max) {
   const out = [];
   for (const [id, m] of near) {
     const s = SPOT[id]; if (!s || m > max) continue;
     const w = res ? win(res[id], labels) : null;
     if (res && !w) continue;
     const score = w ? w.score : usual(s);
-    let v = (w?.no ? -5 : score) - m / 30;
-    if (soc) { v += s.easy ? 1 : 0; if (s.type === "surf" && w?.ft > 4) v -= (w.ft - 4) * 1.5; }
-    else if (s.type === "spear") v += SPEAR_BONUS;
+    const v = (w?.no ? -5 : score) - m / 30 + (s.type === "spear" ? SPEAR_BONUS : 0);
     out.push({ id, name: s.name, type: s.type, easy: s.easy, min: m, score, no: w?.no, label: w?.label, forecast: !!res, v });
   }
   return out.sort((a, b) => b.v - a.v);
@@ -64,62 +60,54 @@ export function makePlan(dayResults) {
   const resFor = {};
   for (const d of [...NIGHTS, TRIP.end]) resFor[d] = dayHas(dayResults, d) ? dayResults(d) : null;
   const camps = CAMPS.filter(c => c.near.some(([, m]) => m <= 35));
-  const n = camps.length, K = NIGHTS.length, kMeet = NIGHTS.indexOf(TRIP.meet);
+  const n = camps.length, K = NIGHTS.length;
 
   // value of sleeping at camp i on night k = arvo session that day near it + next morning's session near it (+ camp comfort)
   const val = NIGHTS.map(d => camps.map(c => {
-    const nd = nextDay(d), socNight = social(d, "arvo");
-    let v = blockValue(sessions(c.near, resFor[d], ARVO, 45, socNight)) + blockValue(sessions(c.near, resFor[nd], MORNING, 35, social(nd, "morning")));
-    v += KBONUS[c.kind] - (c.dirt ? (socNight ? 1 : 0.8) : 0);
-    if (socNight) v += (c.f?.shower || c.kind === "park" ? 0.6 : 0) + (c.f?.toilets ? 0.2 : 0);
-    return v;
+    const nd = nextDay(d);
+    return blockValue(sessions(c.near, resFor[d], ARVO, 45)) + blockValue(sessions(c.near, resFor[nd], MORNING, 35))
+      + KBONUS[c.kind] - (c.dirt ? 0.8 : 0);
+  }));
+  // a 3rd night in one area is only allowed when the forecast there is insane
+  const INSANE = 9;
+  const insane = NIGHTS.map(d => camps.map(c => {
+    const nd = nextDay(d), top = l => Math.max(0, ...l.filter(x => x.forecast && !x.no).map(x => x.score));
+    return top(sessions(c.near, resFor[d], ARVO, 45)) >= INSANE || top(sessions(c.near, resFor[nd], MORNING, 35)) >= INSANE;
   }));
   const home = camps.map(c => driveMin(TRIP.home, c));
   const D = camps.map(a => camps.map(b => driveMin(a, b)));
 
   // night 1 = a powered site (caravan park or a camp with power) so the van's batteries start the trip full
   const powered = c => c.kind === "park" || !!c.f?.power;
-  // state = (camp, nights in a row in that area: 1, 2, 3+). Before the forecast reaches a night there's no weather reason
-  // to sit in one area, so a 3rd night running there costs a bit and a 4th+ more — the base-quality plan tours the best areas.
-  const S = 3, AREA_KM = 30, STREAK_COST = [0, 0, 1.2, 2.4];
-  const near = (i, j) => km(camps[i], camps[j]) < AREA_KM;
-  let best = Array.from({ length: n }, (_, i) => {
-    const row = new Array(S + 1).fill(-Infinity);
-    if (home[i] <= FIRST_MAX && powered(camps[i])) row[1] = val[0][i] - DRIVE_COST * home[i] / 60;
-    return row;
-  });
-  const back = [];
+  // Beam search over routes (keeps the best few hundred part-routes each night). A route may spend at most 2 nights in
+  // any one area (camps within 30 km) over the whole trip — a 3rd only when the forecast there is insane.
+  const AREA_KM = 30, BEAM = 300, PER_CAMP = 3;
+  const near = camps.map(a => camps.map(b => km(a, b) < AREA_KM));
+  let beam = [];
+  camps.forEach((c, i) => { if (home[i] <= FIRST_MAX && powered(c)) beam.push({ r: [i], v: val[0][i] - DRIVE_COST * home[i] / 60 }); });
   for (let k = 1; k < K; k++) {
-    const cur = Array.from({ length: n }, () => new Array(S + 1).fill(-Infinity)), from = Array.from({ length: n }, () => new Array(S + 1).fill(null));
-    const noFc = !resFor[NIGHTS[k]], cost = k > kMeet ? 0.5 : 1;
-    for (let j = 0; j < n; j++) {
-      if (k === K - 1 && home[j] > LAST_MAX) continue;
-      if (k === kMeet && home[j] > FROM_SYD) continue;
-      for (let i = 0; i < n; i++) {
-        let drive;
-        if (k === kMeet) { if (home[i] > MEET_MAX) continue; drive = home[i] + home[j]; } // via Sydney to pick up the others
-        else { drive = D[i][j]; if (drive > (k > kMeet ? SOCIAL_MOVE : MAX_MOVE)) continue; }
+    const next = [];
+    for (const p of beam) {
+      const i = p.r[p.r.length - 1];
+      for (let j = 0; j < n; j++) {
+        if (k === K - 1 && home[j] > LAST_MAX) continue;
+        const drive = D[i][j]; if (drive > MAX_MOVE) continue;
         if (camps[j].kind === "rest" && km(camps[i], camps[j]) < 3) continue; // rest areas: one night only (incl. the other side of the road)
-        const same = k !== kMeet && near(i, j);
-        for (let st = 1; st <= S; st++) {
-          if (best[i][st] === -Infinity) continue;
-          const ns = same ? Math.min(st + 1, S) : 1;
-          const streak = same ? st + 1 : 1;
-          const pen = noFc ? cost * STREAK_COST[Math.min(streak, 3)] : 0;
-          const v = best[i][st] - DRIVE_COST * drive / 60 - pen;
-          if (v > cur[j][ns]) { cur[j][ns] = v; from[j][ns] = [i, st]; }
-        }
+        let nights = 0; for (const x of p.r) if (near[x][j]) nights++;
+        if (nights >= 2 && !insane[k][j]) continue;
+        next.push({ r: p.r, j, v: p.v - DRIVE_COST * drive / 60 + val[k][j] });
       }
-      for (let st = 1; st <= S; st++) if (cur[j][st] > -Infinity) cur[j][st] += val[k][j];
     }
-    back.push(from); best = cur;
+    next.sort((a, b) => b.v - a.v);
+    const per = new Map(); beam = [];
+    for (const x of next) {
+      const c = per.get(x.j) || 0; if (c >= PER_CAMP) continue;
+      per.set(x.j, c + 1); beam.push({ r: [...x.r, x.j], v: x.v });
+      if (beam.length >= BEAM) break;
+    }
+    if (!beam.length) return { days: [], covered: 0 };
   }
-  let top = null;
-  best.forEach((row, i) => row.forEach((v, st) => { if (v > -Infinity && (!top || v > top.v)) top = { v, i, st }; }));
-  if (!top) return { days: [], covered: 0 };
-  const route = [top.i];
-  let cs = [top.i, top.st];
-  for (let k = K - 2; k >= 0; k--) { cs = back[k][cs[0]][cs[1]]; route.unshift(cs[0]); }
+  const route = beam[0].r;
 
   // spell the days out
   const days = [];
@@ -128,18 +116,17 @@ export function makePlan(dayResults) {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
     const out = [], notes = [];
-    const am = prev && sessions(prev.near, resFor[d], MORNING, 35, social(d, "morning"))[0];
+    const am = prev && sessions(prev.near, resFor[d], MORNING, 35)[0];
     if (am) out.push({ when: "Morning", ...am });
     if (k === 0) notes.push("Pick up the van in Bankstown at 9am.");
-    if (k === kMeet) notes.push(`Then Sydney to pick up the others around lunch (~${Math.round(home[route[k - 1]] / 6) / 10} h).`);
-    const pm = sessions(c.near, resFor[d], ARVO, 45, social(d, "arvo")).find(x => x.id !== am?.id);
+    const pm = sessions(c.near, resFor[d], ARVO, 45).find(x => x.id !== am?.id);
     if (pm) out.push({ when: "Arvo", ...pm });
     days.push({ day: d, who: d < TRIP.meet ? "You + Seb" : "All four", forecast: !!resFor[d], sessions: out, notes, camp: c, power: k === 0,
-      drive: k === 0 ? home[route[k]] : k === kMeet ? home[route[k]] : D[route[k - 1]][route[k]], from: k === 0 ? TRIP.home.name : k === kMeet ? "Sydney" : null });
+      drive: k === 0 ? home[route[k]] : D[route[k - 1]][route[k]], from: k === 0 ? TRIP.home.name : null });
   });
   // last day: morning session, then the van back by 2pm
   const last = camps[route[K - 1]], backMin = home[route[K - 1]];
-  const am = sessions(last.near, resFor[TRIP.end], MORNING, 35, true)[0];
+  const am = sessions(last.near, resFor[TRIP.end], MORNING, 35)[0];
   const leaveMin = Math.floor((TRIP.dropOff * 60 - backMin - 20) / 15) * 15, lh = Math.floor(leaveMin / 60), lm = leaveMin % 60;
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
