@@ -1,5 +1,5 @@
 // Offline support: keeps the app, its data and any map tiles you've looked at.
-const VERSION = "a2b1128a8e";
+const VERSION = "0226672e8a";
 const SHELL = `shell-${VERSION}`;
 const TILES = "tiles-v1";
 const MAX_TILES = 3000;
