@@ -74,13 +74,14 @@ export function makePlan(dayResults) {
   const MO = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[nextDay(d)], MORNING, 35))));
   const bonus = camps.map(c => KBONUS[c.kind] - (c.dirt ? 0.8 : 0));
   // value of a block (surf + dive average; a missing one costs 3) skipping spots already done at earlier stops
-  const firstFree = (l, X) => { for (const x of l) if (!X.has(x.id)) return x; return null; };
-  function blockFree(b, X) {
-    const su = firstFree(b.surf, X), sp = firstFree(b.spear, X);
+  // P = spots already done at this stop: redoing one costs 2.5, so stops with a few good spots win
+  const firstFree = (l, X, P) => { let b = null, bv = -Infinity; for (const x of l) { if (X.has(x.id)) continue; const v = x.v - (P.has(x.id) ? 2.5 : 0); if (v > bv) { bv = v; b = x; } } return b && { ...b, v: bv }; };
+  function blockFree(b, X, P) {
+    const su = firstFree(b.surf, X, P), sp = firstFree(b.spear, X, P);
     if (!su && !sp) return { v: 0, ids: [] };
     return { v: ((su ? su.v : sp.v - 3) + (sp ? sp.v : su.v - 3)) / 2, ids: [su?.id, sp?.id].filter(Boolean) };
   }
-  const nightVal = (k, j, X) => { const a = blockFree(AR[k][j], X), m = blockFree(MO[k][j], X); return { v: a.v + m.v + bonus[j], ids: [...a.ids, ...m.ids] }; };
+  const nightVal = (k, j, X, P) => { const a = blockFree(AR[k][j], X, P), m = blockFree(MO[k][j], X, new Set([...P, ...a.ids])); return { v: a.v + m.v + bonus[j], ids: [...a.ids, ...m.ids] }; };
   // a 3rd night in one area is only allowed when the forecast there is insane
   const INSANE = 9;
   const insane = NIGHTS.map(d => camps.map(c => {
@@ -114,7 +115,7 @@ export function makePlan(dayResults) {
     if (home[i] > FIRST_MAX || !powered(c)) return;
     const nN = side[i] === "N" ? 1 : 0, nS = side[i] === "S" ? 1 : 0;
     if (short(nN, nS) > K - 1) return;
-    const nv = nightVal(0, i, new Set());
+    const nv = nightVal(0, i, new Set(), new Set());
     beam.push({ r: [i], v: nv.v - DRIVE_COST * home[i] / 60, nN, nS, used: new Set(), cur: new Set(nv.ids), anchor: i, streak: 1, past: [] });
   });
   for (let k = 1; k < K; k++) {
@@ -133,7 +134,7 @@ export function makePlan(dayResults) {
         if (short(nN, nS) > K - 1 - k) continue; // can't fit both coasts in any more
         // spots done at earlier stops are off the list; staying put you can redo this stop's spots
         const X = stay ? p.used : new Set([...p.used, ...p.cur]);
-        const nv = nightVal(k, j, X);
+        const nv = nightVal(k, j, X, stay ? p.cur : new Set());
         next.push({ p, j, nN, nS, stay, X, ids: nv.ids, v: p.v - DRIVE_COST * drive / 60 + nv.v });
       }
     }
@@ -158,10 +159,11 @@ export function makePlan(dayResults) {
   // a spot already used at an earlier stop isn't used again (same stop, next day is fine)
   const stopOf = []; route.forEach((r, k) => { stopOf.push(k && near[route[stopOf[k - 1]]][r] ? stopOf[k - 1] : k); });
   const usedAt = new Map();
-  // (and while staying, a spot already done costs a point so a near-equal different spot wins)
+  // (and while staying, each time a spot's already been done costs 2.5 points, so a decent different spot wins)
   const fresh = (list, k) => list.filter(x => !usedAt.has(x.id) || usedAt.get(x.id) === stopOf[k])
-    .map(x => (usedAt.has(x.id) ? { ...x, v: x.v - 1 } : x)).sort((a, b) => b.v - a.v);
-  const use = (x, k) => { if (x && !usedAt.has(x.id)) usedAt.set(x.id, stopOf[k]); return x; };
+    .map(x => (usedAt.has(x.id) ? { ...x, v: x.v - 2.5 * (timesUsed.get(x.id) || 1) } : x)).sort((a, b) => b.v - a.v);
+  const timesUsed = new Map();
+  const use = (x, k) => { if (x) { if (!usedAt.has(x.id)) usedAt.set(x.id, stopOf[k]); timesUsed.set(x.id, (timesUsed.get(x.id) || 0) + 1); } return x; };
   NIGHTS.forEach((d, k) => {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
