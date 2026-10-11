@@ -251,33 +251,22 @@ function renderHomeView() { $("#home").innerHTML = state.data ? renderHome(ctx()
 function renderOutlookView() { $("#outlook").innerHTML = state.data ? renderOutlook(ctx()) : `<p class="note">Loading forecast…</p>`; }
 
 // ---------- trip plan ----------
-const SIDE_NAME = { south: "South coast", north: "North coast" };
 function renderPlan() {
   if (!state.data) { $("#plan").innerHTML = `<p class="note">Loading forecast…</p>`; return; }
-  const forced = prefs.planOrder && prefs.planOrder !== "auto" ? prefs.planOrder : null;
-  const P = makePlan(dayResults, forced);
-  const [s1, s2] = P.order;
+  const P = makePlan(dayResults);
   const dname = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
   const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
-  const sess = x => `<button class="psess" type="button" data-open="${x.id}" data-day="${x.day}"><span class="pwhen">${x.when}</span>
+  const sess = (x, day) => `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
-      <span>${x.type === "surf" ? "🏄" : "🐟"} <b>${esc(x.name)}</b>${x.easy === "learn" && x.mode === "social" ? " · beginner-friendly" : x.easy === "snorkel" && x.mode === "social" ? " · easy snorkel" : ""}<small>${x.label ? x.label + " · " : ""}${x.from ? "from " + x.from : (x.min ?? 0) + " min drive"}</small></span></button>`;
-  const days = P.plan.map(e => `<article class="pday ${e.mode}">
-      <header><b>${dname(e.day)}</b><span>${esc(e.who)} · ${SIDE_NAME[e.side]}</span>${e.forecast ? "" : `<em>rough plan · forecast not out yet</em>`}</header>
-      ${e.sessions.map(x => sess({ ...x, day: e.day, mode: e.mode })).join("")}
-      ${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
-      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.c.lat, e.camp.c.lon)}" target="_blank" rel="noopener"><small>${e.area ? "Tonight: " + esc(e.area) : "Tonight"}</small><span>🌙 <b>${esc(e.camp.c.name)}</b></span><small>${KIND[e.camp.c.kind].icon} ${esc(KIND[e.camp.c.kind].label)} · ${esc(KIND[e.camp.c.kind].cost.split(" · ")[0])} · ${mins(e.campDrive)} drive${e.camp.c.dirt ? " · ⚠ dirt access" : ""}${facilities(e.camp.c).length ? " · " + esc(facilities(e.camp.c).join(", ")) : ""}</small></a>` : ""}
+      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}</small></span></button>`;
+  const days = P.days.map(e => `<article class="pday core">
+      <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>rough · forecast not out yet</em>`}</header>
+      ${e.sessions.map(x => sess(x, e.day)).join("")}
+      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small></a>` : ""}
+      ${e.toSydney ? `<p class="pnote">Then Sydney to meet the others · ${mins(e.toSydney)}</p>` : ""}
     </article>`).join("");
-  const opt = (v, t) => `<button type="button" data-planorder="${v}" aria-pressed="${(prefs.planOrder || "auto") === v}">${t}</button>`;
-  $("#plan").innerHTML = `<section class="hsec"><h2>Trip plan · 21–31 Oct</h2>
-    <div class="legs">
-      <div class="leg core"><small>Leg 1 · 21–25 Oct · you + Seb</small><b>${SIDE_NAME[s1]}</b><span>Best surf + spearing</span></div>
-      <div class="leg social"><small>Leg 2 · 26–30 Oct · all four</small><b>${SIDE_NAME[s2]}</b><span>Beginner waves + easy snorkelling</span></div>
-    </div>
-    <ul class="why">${P.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul>
-    <div class="seg planorder">${opt("auto", "Auto")}${opt("south", "South first")}${opt("north", "North first")}</div>
-    <small class="hint">About ${mins(Math.round(P.totalDrive / 5) * 5)} of driving in total (rough). Re-plans every time the forecast updates.</small>
-  </section>${days}`;
+  $("#plan").innerHTML = `<section class="hsec"><h2>You + Seb · 21–25 Oct</h2>
+    <small class="hint">Updates itself with every forecast.</small></section>${days}`;
 }
 
 // ---------- spot sheet ----------
@@ -448,7 +437,6 @@ document.addEventListener("click", async e => {
     showView("mapView");
     setTimeout(() => map.fitBounds(L.latLngBounds(regionBounds(b.dataset.goregion)).pad(0.4)), 50);
   }
-  else if (b.dataset.planorder) { prefs.planOrder = b.dataset.planorder; savePrefs(); renderPlan(); }
   else if (b.dataset.day) { state.day = b.dataset.day; renderAll(); }
   else if (b.dataset.mode) { state.mode = b.dataset.mode; b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderAll(); }
   else if (b.dataset.view) showView(b.dataset.view);
