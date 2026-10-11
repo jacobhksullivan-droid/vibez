@@ -5,7 +5,7 @@
 // Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per area (30 km; a 3rd only if
 // the forecast there is insane, a 9+ session) and never back to an area once you've left it.
 // Every night's camp is picked together (beam search over routes) so the sessions around it score as high
-// as possible, minus the cost of driving. Days: morning session near last night's camp → drive → arvo session near tonight's.
+// as possible, minus the cost of driving. Every day = one surf + one dive: morning near last night's camp → drive → arvo near tonight's.
 // Uses the forecast where it reaches; days it doesn't reach yet use each spot's base quality. Re-plans on every refresh.
 import { SPOTS } from "../data/spots.js";
 import { CAMPS, KIND } from "./camps.js";
@@ -49,11 +49,23 @@ function sessions(near, res, labels, max) {
   }
   return out.sort((a, b) => b.v - a.v);
 }
-// how good a block of sessions is: the best one, plus a little for having the other activity close by too
+// how good a block of sessions is: we want to surf AND spear every day, so a camp is worth the average of its best
+// surf and best dive (a missing one costs 3 points)
 function blockValue(list) {
-  const top = list[0]; if (!top) return 0;
-  const other = list.find(x => x.type !== top.type);
-  return top.v + (other ? 0.3 * Math.max(0, other.v) : 0);
+  const surf = list.find(x => x.type === "surf"), spear = list.find(x => x.type === "spear");
+  if (!surf && !spear) return 0;
+  return ((surf ? surf.v : (spear.v - 3)) + (spear ? spear.v : (surf.v - 3))) / 2;
+}
+// one surf + one dive a day: whichever order (morning/arvo) scores better
+function pickDay(amList, pmList) {
+  const top = (l, t, not) => l.find(x => x.type === t && x.id !== not);
+  let best = null;
+  for (const [a, b] of [["surf", "spear"], ["spear", "surf"]]) {
+    const am = top(amList, a), pm = top(pmList, b, am?.id);
+    if (am && pm && (!best || am.v + pm.v > best.v)) best = { am, pm, v: am.v + pm.v };
+  }
+  if (best) return best;
+  const am = amList[0]; return { am, pm: pmList.find(x => x.id !== am?.id) };
 }
 const nextDay = d => (d === NIGHTS[NIGHTS.length - 1] ? TRIP.end : NIGHTS[NIGHTS.indexOf(d) + 1]);
 
@@ -146,10 +158,11 @@ export function makePlan(dayResults) {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
     const out = [], notes = [];
-    const am = prev && use(fresh(sessions(prev.near, resFor[d], MORNING, 35), k - 1)[0], k - 1);
+    const pick = pickDay(prev ? fresh(sessions(prev.near, resFor[d], MORNING, 35), k - 1) : [], fresh(sessions(c.near, resFor[d], ARVO, 45), k));
+    const am = prev && use(pick.am, k - 1);
     if (am) out.push({ when: "Morning", ...am });
     if (k === 0) notes.push("Pick up the van in Bankstown at 9am.");
-    const pm = use(fresh(sessions(c.near, resFor[d], ARVO, 45), k).find(x => x.id !== am?.id), k);
+    const pm = use(pick.pm, k);
     if (pm) out.push({ when: "Arvo", ...pm });
     days.push({ day: d, who: d < TRIP.meet ? "You + Seb" : "All four", forecast: !!resFor[d], sessions: out, notes, camp: c, power: k === 0,
       drive: k === 0 ? home[route[k]] : D[route[k - 1]][route[k]], from: k === 0 ? TRIP.home.name : null });
