@@ -10,7 +10,7 @@ import { SPOTS, BUOYS, BOM_STATIONS } from "../data/spots.js";
 import { loadBuoys } from "./buoys.js";
 
 const CACHE_KEY = "cc-forecast-v2";
-const MAX_AGE = 2 * 60 * 60e3;  // refresh every 2 h (keeps us inside Open-Meteo's free daily limit on both phones)
+const MAX_AGE = 3 * 60 * 60e3;  // refresh every 3 h: ~79 spots ≈ 450 Open-Meteo calls a fetch, so two phones on one hotspot stay under the free 10k/day
 const MIN_GAP = 10 * 60e3;      // a manual refresh within 10 min of the last fetch reuses it
 const DAYS = 10;
 

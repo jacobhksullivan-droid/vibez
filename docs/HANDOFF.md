@@ -132,3 +132,6 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
 - Scoring: `surf.bestSwell` (locals' best swell direction, full marks; rest of window 0.6), surf dir weight 1.3; rule conditions `sstMin` and `months`.
 - Research round 4 (notes: `research/round4_notes.md`): +9 spear, +3 surf → 32 surf + 36 spear. Facebook groups readable via Jacob's Chrome (Spearfishing the Illawarra 351452488781913, Mid North Coast Diving Spearing & Fishing `midcoastdivenspear`, Nearshore conditions 656334855332716, Beginners Sydney Spearfishing).
 - Camp `near` lists extended with OSRM for new spots (scratch script; same method as the original build).
+- Surf retuned for Jacob + Seb (confident to ~6 ft): every break size [3,6], maxSize 7 (Wannasurf hold limits), `surf.quality` (+0.8 world class / +0.4 regional classic / −0.6 sloppy) added to the score. +11 quality breaks: Sandon Point, Minnamurra, North Bendalong, Merimbula Bar, Moruya rivermouth, North Avoca, Bar Beach, Tuncurry breakwall, North Haven, Horseshoe Bay SWR, Delicate Nobby → 43 surf + 36 spear.
+- Forecast refresh now every 3 h (79 spots ≈ 450 Open-Meteo calls a fetch).
+- Plan: night 1 is always a powered site (caravan park / camp with power) to charge the van.

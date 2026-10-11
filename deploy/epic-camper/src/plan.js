@@ -1,7 +1,7 @@
 // Trip plan for Jacob + Seb: 21–25 Oct, then a dawn session on the 26th before meeting the others in Sydney.
 // One plan, no options. Anywhere on the coast: each night's camp is picked (over all five nights at once) so the
 // sessions around it score as high as possible, minus the cost of driving. Spearing counts a bit more than surf.
-// Days: morning session near last night's camp → drive → arvo session near tonight's camp.
+// Night 1 is always a powered site (charge the van). Days: morning session near last night's camp → drive → arvo session near tonight's camp.
 // Re-plans every time the forecast refreshes; days it doesn't reach yet use each spot's usual quality.
 import { SPOTS } from "../data/spots.js";
 import { CAMPS, KIND } from "./camps.js";
@@ -66,7 +66,9 @@ export function makePlan(dayResults) {
   const D = camps.map(a => camps.map(b => driveMin(a, b)));
 
   // best route over all five nights (dynamic programming over camps)
-  let best = camps.map((c, i) => (home[i] <= FIRST_MAX ? val[0][i] - DRIVE_COST * home[i] / 60 : -Infinity));
+  // night 1 = a powered site (caravan park or a camp with power) so the van's batteries start the trip full
+  const powered = c => c.kind === "park" || !!c.f?.power;
+  let best = camps.map((c, i) => (home[i] <= FIRST_MAX && powered(c) ? val[0][i] - DRIVE_COST * home[i] / 60 : -Infinity));
   const back = [];
   for (let k = 1; k < K; k++) {
     const cur = new Array(n).fill(-Infinity), from = new Array(n).fill(-1);
@@ -98,7 +100,7 @@ export function makePlan(dayResults) {
     if (am) out.push({ when: "Morning", ...am });
     const pm = sessions(c.near, resFor[d], ARVO, 45).find(x => x.id !== am?.id);
     if (pm) out.push({ when: "Arvo", ...pm });
-    days.push({ day: d, forecast: !!resFor[d], sessions: out, camp: c, drive: prev ? D[route[k - 1]][route[k]] : home[route[k]], from: prev ? null : TRIP.home.name });
+    days.push({ day: d, forecast: !!resFor[d], sessions: out, camp: c, power: k === 0, drive: prev ? D[route[k - 1]][route[k]] : home[route[k]], from: prev ? null : TRIP.home.name });
   });
   const last = camps[route[K - 1]];
   const am = sessions(last.near, resFor[TRIP.meet], MORNING, 35)[0];

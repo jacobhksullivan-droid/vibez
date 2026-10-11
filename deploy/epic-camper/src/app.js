@@ -262,7 +262,7 @@ function renderPlan() {
   const days = P.days.map(e => `<article class="pday core">
       <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>rough · forecast not out yet</em>`}</header>
       ${e.sessions.map(x => sess(x, e.day)).join("")}
-      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small></a>` : ""}
+      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
       ${e.toSydney ? `<p class="pnote">Then Sydney to meet the others · ${mins(e.toSydney)}</p>` : ""}
     </article>`).join("");
   $("#plan").innerHTML = `<section class="hsec"><h2>You + Seb · 21–25 Oct</h2>

@@ -339,11 +339,15 @@ export function surfHour(spot, fc, i) {
   const dirPts = W.dir * (dirBest ? 1 : dirOk ? 0.6 : 0.2);
   parts.push({ tag: "direction", text: `${card(dom.d)} swell — ${dirBest ? (S.bestSwell ? "the locals' best direction here" : "in the spot's window") : dirOk ? "works, but not the best direction here" : "outside the spot's window"}`, pts: dirPts, max: W.dir });
 
+  // how good the wave itself is (surfer-written guides): classic breaks get a bump
+  const qPts = S.quality ?? 0;
+  if (qPts) parts.push({ tag: "quality", text: qPts > 0.5 ? "world-class wave" : qPts > 0 ? "regional classic" : "average-quality wave", pts: qPts });
+
   const t = c.tide, tf = tideFit(t, c.date, "surf", S.tide);
   const tidePts = W.tide * tf.k;
   parts.push({ tag: "tide", text: `${tideText(t)} — ${tf.why}${springNote(c)}`, pts: tidePts, max: W.tide });
 
-  let score = sizePts + periodPts + windPts + dirPts + tidePts;
+  let score = sizePts + periodPts + windPts + dirPts + tidePts + qPts;
   score += sharkPenalty(spot, c, "surf", parts);
   score = applyRules(spot, "surf", 0, c, score, parts);
   if (ft > S.maxSize + 1) { score = Math.min(score, 3); parts.push({ tag: "safety", text: `too big for us (~${Math.round(ft)} ft)`, cap: 3 }); }

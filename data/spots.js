@@ -20,6 +20,8 @@
 //        then: { spear:+2, surf:-1, spearCap:3, surfCap:3 },
 //        why: "plain-English reason shown in the app", src: "link or note" }
 //    swellMin/Max are offshore significant wave height in metres. sstMin = water temp °C.
+//  * surf.quality = how good the wave is (Wannasurf rating: world class +0.8, regional classic +0.4, normal 0, sloppy −0.6),
+//    added straight onto the 0–10 score. size = [ideal ft range], maxSize = biggest we'd surf (Jacob + Seb: confident to ~6 ft).
 //  * surf.bestSwell = the locals' best swell direction inside swellDir (full direction points; the rest of swellDir gets part).
 // ------------------------------------------------------------------
 
@@ -48,7 +50,7 @@ export const SPOTS = [
     overnight: "Pambula Beach / Merimbula holiday parks.",
     facing: 80, terrain: "Sand beach break between Merimbula and the Pambula River mouth.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [45, 135], swellDir: [45, 160], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 290], tide: ["mid"] },
+    surf: { quality: 0, bestSwell: [45, 135], swellDir: [45, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 290], tide: ["mid"] },
     hazards: "Rips. Pambula rivermouth (south end) is a heavy, hollow wave — not for us.",
     intel: [
       { text: "Very consistent, fun beach break — \"a great place to learn to surf and on the right day\" good waves. Best on SE–NE swell with W/SW wind, mid tide.", src: "Wannasurf — Pambula beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/pambula_beach/index.html" },
@@ -65,7 +67,7 @@ export const SPOTS = [
     overnight: "Caravan parks at Bermagui and Wallaga Lake.",
     facing: 80, terrain: "Sand bars with rock beside Camel Rock; fun lefts.",
     shelterSwell: [[200, 230, 0.3]], shelterWind: [[180, 220, 0.3]],
-    surf: { bestSwell: [90, 180], swellDir: [80, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 290], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [90, 180], swellDir: [80, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 290], tide: ["low", "mid", "high"] },
     hazards: "Rips and rocks. Crowded on weekends.",
     intel: [
       { text: "Regional classic sand-bar, fast and fun, for all surfers; S–SE–E swell with W/SW wind, works at all tides. Doesn't always work properly.", src: "Wannasurf — Camel rock", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/camel_rock/index.html" },
@@ -80,7 +82,7 @@ export const SPOTS = [
     overnight: "Potato Point / Tuross Head holiday parks; Eurobodalla NP campgrounds.",
     facing: 45, terrain: "Headland with a longish right-hand point/beach break on the north side (left on the south side). Blackfellows Point (long fun right) two headlands north.",
     shelterSwell: [[160, 220, 0.5]], shelterWind: [[160, 240, 0.6]],
-    surf: { bestSwell: [20, 100], swellDir: [10, 130], size: [2, 4], maxSize: 6, periodMin: 8, offshore: [180, 260], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [20, 100], swellDir: [10, 130], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [180, 260], tide: ["low", "mid", "high"] },
     hazards: "Rips; isolated.",
     intel: [
       { text: "Very consistent semi-secret spot: headland with waves 2–7 ft either side — the better longish right on the north side, a left on the south side, long workable walls; rips can make the paddle out easy. N–E–NE swell, SW/S wind.", src: "Wannasurf — Potato Point", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/Potatoe_Point/index.html" },
@@ -98,7 +100,7 @@ export const SPOTS = [
     overnight: "Batemans Bay holiday parks; Murramarang NP campgrounds north.",
     facing: 115, terrain: "Beach break with a bit of reef on the left side.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [100, 180], swellDir: [90, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [225, 360], tide: ["low", "mid"] },
+    surf: { quality: 0.4, bestSwell: [100, 180], swellDir: [90, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [225, 360], tide: ["low", "mid"] },
     hazards: "Rips. Localism mentioned — be polite.",
     intel: [
       { text: "Regional-classic beach break, fun, \"best suited to stand ups / mal riders\"; S–SE–E swell with N/NW/W/SW wind, low–mid tide.", src: "Wannasurf — Mckenzies", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/mckenzies/index.html" },
@@ -115,7 +117,7 @@ export const SPOTS = [
     overnight: "Durras holiday parks; Murramarang NP (Depot Beach, Pebbly Beach).",
     facing: 105, terrain: "Long sandy beach with many intermediate beach-break peaks; south end tucked from S wind.",
     shelterSwell: [[160, 220, 0.4]], shelterWind: [[150, 230, 0.6]],
-    surf: { bestSwell: [45, 135], swellDir: [30, 150], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [200, 300], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, bestSwell: [45, 135], swellDir: [30, 150], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [200, 300], tide: ["low", "mid", "high"] },
     hazards: "Rips.",
     intel: [
       { text: "Durras picks up swell from all directions: South Durras for NE/E/SE swell on W/SW and S winds; lots of intermediate beach breaks, consistent, good longboarding options, rarely crowded.", src: "Wannasurf — Durras Beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/Durras_Beach/index.html" },
@@ -132,7 +134,7 @@ export const SPOTS = [
     overnight: "North Durras caravan park; Murramarang NP campgrounds.",
     facing: 120, terrain: "North end of Durras beach, tucked from N–NE wind.",
     shelterSwell: [[0, 60, 0.4]], shelterWind: [[0, 70, 0.6]],
-    surf: { bestSwell: [100, 180], swellDir: [90, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [270, 60], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, bestSwell: [100, 180], swellDir: [90, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [270, 60], tide: ["low", "mid", "high"] },
     hazards: "Rips. North Durras reef (helmet territory) is not for us.",
     intel: [
       { text: "North Durras for S/SE/E swell on NE/NW and W winds — intermediate beach breaks, friendly locals.", src: "Wannasurf — Durras Beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/Durras_Beach/index.html" },
@@ -149,7 +151,7 @@ export const SPOTS = [
     overnight: "Ulladulla Headland Holiday Park; Murramarang NP campgrounds to the south.",
     facing: 105, terrain: "Sand bars at the north end by Bannisters Point; lefts off the point.",
     shelterSwell: [[0, 30, 0.3]], shelterWind: [[0, 40, 0.4]],
-    surf: { swellDir: [60, 170], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [230, 320], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, swellDir: [60, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [230, 320], tide: ["low", "mid", "high"] },
     hazards: "Rocks about 50 m down from the point at low tide. Mollymook point (south end) is reef for experienced surfers.",
     intel: [
       { text: "Very consistent: on a good swell it peels beautiful lefts, good for shortboards and mini mals; almost no-one there outside school holidays. Watch rocks at low tide ~50 m from the point.", src: "Wannasurf — Bannisters point", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/Bannisters_point/index.html" },
@@ -164,7 +166,7 @@ export const SPOTS = [
     overnight: "Bendalong / Manyana holiday parks.",
     facing: 125, terrain: "Sheltered beach break just south of Bendalong; smaller than Bendalong when it's big.",
     shelterSwell: [[20, 80, 0.5]], shelterWind: [[20, 80, 0.6]],
-    surf: { bestSwell: [110, 180], swellDir: [100, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [270, 60], tide: ["low", "mid"] },
+    surf: { quality: 0, bestSwell: [110, 180], swellDir: [100, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [270, 60], tide: ["low", "mid"] },
     hazards: "Rips. Don't drop in on locals.",
     intel: [
       { text: "Consistent and uncrowded; doesn't get as much swell as Bendalong, so it's the smaller option when Bendalong is too big. Best low–mid tide; offshore-ish in summer north-easters.", src: "Wannasurf — Inyadda", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/Inyadda/index.html" },
@@ -184,7 +186,7 @@ export const SPOTS = [
     overnight: "Holiday parks at Culburra Beach and Currarong.",
     facing: 55, terrain: "NE-facing beach break running from Penguin Head (south) up to Crookhaven Heads.",
     shelterSwell: [[150, 210, 0.5]], shelterWind: [[150, 220, 0.6]],
-    surf: { swellDir: [30, 160], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [200, 270], tide: ["low", "mid"] },
+    surf: { quality: 0, swellDir: [30, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [200, 270], tide: ["low", "mid"] },
     hazards: "Crookhaven River mouth at the north end — strong currents.",
     intel: [
       { text: "Very consistent beach break for all surfers; best low–mid tide.", src: "Wannasurf — Culburra beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/culburra_beach/index.html" },
@@ -201,7 +203,7 @@ export const SPOTS = [
     overnight: "Werri Beach Holiday Park; Killalea campground (Shell Cove).",
     facing: 100, terrain: "Beach break between two headlands; Werri Point at the south end.",
     shelterSwell: [[175, 210, 0.3]], shelterWind: [[170, 220, 0.4]],
-    surf: { swellDir: [45, 170], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 300], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, swellDir: [45, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 300], tide: ["low", "mid", "high"] },
     hazards: "Rips along the rocks; can be punchy and ledgey.",
     intel: [
       { text: "On a SE swell go to the northern headland; on NE go to Werri Point at the southern headland; on E anywhere on the beach. The point can close out on a strong NE swell.", src: "Wannasurf — Werri beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/werri_beach/index.html" },
@@ -219,7 +221,7 @@ export const SPOTS = [
     overnight: "Killalea campground (paid, on site).",
     facing: 165, terrain: "South-facing bay at Killalea, sand bars with rock; Bass Point blocks E–NE swell and wind.", // facing checked against OSM coastline + satellite (8 Oct 2026)
     shelterSwell: [[20, 100, 0.6]], shelterWind: [[10, 90, 0.6]],
-    surf: { bestSwell: [130, 190], swellDir: [100, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [270, 60], tide: ["mid", "high"] },
+    surf: { quality: 0, bestSwell: [130, 190], swellDir: [100, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [270, 60], tide: ["mid", "high"] },
     hazards: "Crowded to ultra-crowded. Mystics (north end) is a reef for better surfers.",
     intel: [
       { text: "Wollongong locals' top beginner pick: protected on both sides by points so the swell stays modest; works on any tide (gets busy).", src: "Reddit r/wollongong \u2014 Beginner surfer / Learn to surf locally", url: "https://www.google.com/search?q=site%3Areddit.com+%22head+to+the+farm+in+Shellharbour%22" },
@@ -239,7 +241,7 @@ export const SPOTS = [
     overnight: "Holiday parks at The Entrance / Toowoon Bay.",
     facing: 120, terrain: "Beach break; pick a sand bank.",
     shelterSwell: [], shelterWind: [],
-    surf: { swellDir: [45, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 320], tide: ["mid"] },
+    surf: { quality: 0.4, swellDir: [45, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 320], tide: ["mid"] },
     hazards: "Crowded in school holidays (especially South Shelly). Doesn't handle 6 ft+.",
     intel: [
       { text: "Central Coast locals: North Shelly can be good for learners; Toowoon Bay (next bay south) is the mellow backup.", src: "Reddit r/centralcoastnsw \u2014 Beginner surf beaches", url: "https://www.google.com/search?q=site%3Areddit.com+%22Toowoon+bay+is+great%22" },
@@ -255,7 +257,7 @@ export const SPOTS = [
     overnight: "Norah Head Holiday Park.",
     facing: 135, terrain: "Three areas: lefts off the point at the north end, the clubhouse peaks, and the bay at the south end.",
     shelterSwell: [[0, 50, 0.5]], shelterWind: [[0, 60, 0.5]],
-    surf: { bestSwell: [95, 150], swellDir: [90, 170], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 360], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, bestSwell: [95, 150], swellDir: [90, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 360], tide: ["low", "mid", "high"] },
     hazards: "Rocks at the point.",
     intel: [
       { text: "Central Coast locals warn Soldiers \"can get hectic\" \u2014 pick a small day.", src: "Reddit r/centralcoastnsw \u2014 Beginner surf beaches", url: "https://www.google.com/search?q=site%3Areddit.com+%22soldiers+beach+can+get+hectic%22" },
@@ -271,7 +273,7 @@ export const SPOTS = [
     overnight: "Stockton Beach Holiday Park; Newcastle holiday parks.",
     facing: 125, terrain: "Long beach break with good sand bars; easy take-offs and long walls.",
     shelterSwell: [[20, 60, 0.3]], shelterWind: [[20, 70, 0.6]],
-    surf: { bestSwell: [90, 150], swellDir: [90, 190], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [230, 330], tide: ["low", "mid"] },
+    surf: { quality: 0.4, bestSwell: [90, 150], swellDir: [90, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [230, 330], tide: ["low", "mid"] },
     hazards: "Merewether's reefs (Ladies, the point) are for better surfers — stay on the beach.",
     intel: [
       { text: "Very consistent, fun, easy take-off with a nice long wall; goes well small and offshore, picks up a fair bit of swell, protected from the NE wind; good alternative when everywhere else is crowded.", src: "Wannasurf — Merewether", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Newcastle/merewether/index.html" },
@@ -289,7 +291,7 @@ export const SPOTS = [
     overnight: "Stockton Beach Holiday Park (ferry/drive); Newcastle holiday parks.",
     facing: 120, terrain: "Beach break tucked south of Nobbys Head and the harbour breakwall; the 'Nobbies shorey' gives fast lefts.",
     shelterSwell: [[0, 80, 0.7]], shelterWind: [[10, 80, 0.7]],
-    surf: { swellDir: [100, 200], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [270, 340], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, swellDir: [100, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [270, 340], tide: ["low", "mid", "high"] },
     hazards: "Shipping channel/breakwall at the north end. Bluebottles in easterly winds.",
     intel: [
       { text: "Newcastle locals: Nobbys is the best beginner beach \u2014 long gentle break, not crowded, and somewhat sheltered from northerly swells. Merewether is more territorial.", src: "Reddit r/newcastle \u2014 beginner surfing threads", url: "https://www.google.com/search?q=site%3Areddit.com+%22Nobby%27s+is+nice+for+a+beginner%22" },
@@ -307,7 +309,7 @@ export const SPOTS = [
     overnight: "One Mile Beach Holiday Park (on the beach).",
     facing: 150, terrain: "Mile-long beach with a good A-frame (2–4 ft); point at the end — sets break in line with the 'three sisters' rocks.",
     shelterSwell: [[10, 70, 0.6]], shelterWind: [[0, 70, 0.6]],
-    surf: { bestSwell: [90, 140], swellDir: [90, 210], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [290, 360], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [90, 140], swellDir: [90, 210], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [290, 360], tide: ["low", "mid", "high"] },
     hazards: "Rocks at the point end.",
     intel: [
       { text: "Regional classic, very consistent: a pretty good A-frame mostly around 2–4 ft; laid-back, no scary locals.", src: "Wannasurf — One mile beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/one_mile_beach/index.html" },
@@ -323,7 +325,7 @@ export const SPOTS = [
     overnight: "Seal Rocks Holiday Park; Treachery Camp.",
     facing: 35, terrain: "North-facing bay in the lee of Sugarloaf Point; long lines peeling across the beach.",
     shelterSwell: [[150, 230, 0.6]], shelterWind: [[150, 250, 0.8]],
-    surf: { bestSwell: [20, 100], swellDir: [0, 140], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [180, 260], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [20, 100], swellDir: [0, 140], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [180, 260], tide: ["low", "mid", "high"] },
     hazards: "Rocks along the point; boats launch off the beach.",
     intel: [
       { text: "\"Around Seal Rocks is great beginner surf and an amazing place to stay.\"", src: "Reddit r/surfing \u2014 Surfing trip Australia (East Coast)", url: "https://www.google.com/search?q=site%3Areddit.com+%22Around+Seal+Rocks+is+great+beginner+surf%22" },
@@ -342,7 +344,7 @@ export const SPOTS = [
     overnight: "Crescent Head Holiday Park; Hat Head NP campgrounds (Delicate).",
     facing: 40, terrain: "Long right-hand point break over sand and rock into Killick Creek mouth. Perfect for the 6'10.",
     shelterSwell: [[0, 30, 0.3]], shelterWind: [[150, 250, 0.8]],
-    surf: { bestSwell: [70, 140], swellDir: [60, 160], size: [2, 4], maxSize: 5, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [70, 140], swellDir: [60, 160], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
     hazards: "Crowded, especially school holidays. Rocks on the inside at low tide. Back Beach: don't go right off the point (submerged rocks) — go left.",
     intel: [
       { text: "Even when small, catch them from right out on the point — they run through to the creek mouth and you have right of way all the way in. Don't go in school holidays.", src: "Wannasurf — Crescent head", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/crescent_head/index.html" },
@@ -361,7 +363,7 @@ export const SPOTS = [
     overnight: "Lake Cathie / Bonny Hills holiday parks.",
     facing: 85, terrain: "Great banks all along the beach; Middle Rock point-break at the south end; fun smaller shorey in close.",
     shelterSwell: [[170, 210, 0.3]], shelterWind: [[170, 220, 0.4]],
-    surf: { swellDir: [45, 160], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 320], tide: ["low", "mid"] },
+    surf: { quality: 0.4, swellDir: [45, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 320], tide: ["low", "mid"] },
     hazards: "Rips; lake mouth.",
     intel: [
       { text: "Regional classic, very consistent: great banks all along the beach; Middle Rock at the south end is the most popular, consistent wave; nice clean wave out the back, fun shorey in close.", src: "Wannasurf — Lake cathie", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/lake_cathie/index.html" },
@@ -377,7 +379,7 @@ export const SPOTS = [
     overnight: "Diamond Head campground (on site, showers/toilets).",
     facing: 60, terrain: "Point break, sand with rock; waves not very powerful — mellow for a midlength.",
     shelterSwell: [[160, 220, 0.5]], shelterWind: [[160, 230, 0.6]],
-    surf: { swellDir: [40, 160], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [200, 290], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, swellDir: [40, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [200, 290], tide: ["low", "mid", "high"] },
     hazards: "Occasional rocks.",
     intel: [
       { text: "Regional-classic point for all surfers; works on W winds, all tides; the waves aren't very powerful. Camping ground with showers on site.", src: "Wannasurf — Diamond head", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/diamond_head/index.html" },
@@ -396,7 +398,7 @@ export const SPOTS = [
     overnight: "Sawtell Beach Holiday Park.",
     facing: 115, terrain: "Sandy point/beach break off Sawtell headland; surfers take the wider waves, bodyboarders the wedge.",
     shelterSwell: [[170, 210, 0.4]], shelterWind: [[170, 220, 0.5]],
-    surf: { swellDir: [45, 170], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 300], tide: ["low", "mid"] },
+    surf: { quality: 0.4, swellDir: [45, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 300], tide: ["low", "mid"] },
     hazards: "Crowded to ultra-crowded. Murrays (just south) is the quieter longboard option at higher tides.",
     intel: [
       { text: "Very consistent and very easy — surfers take the wider waves while bodyboarders have the wedge; low–mid tide; crowded.", src: "Wannasurf — Sawtell", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Banana_Coast/sawtell/index.html" },
@@ -412,7 +414,7 @@ export const SPOTS = [
     overnight: "Park Beach Holiday Park; Coffs holiday parks.",
     facing: 75, terrain: "Small beach (a few hundred metres) between headlands; rip in the south corner takes you straight out the back.",
     shelterSwell: [[160, 200, 0.4]], shelterWind: [[160, 220, 0.4]],
-    surf: { swellDir: [45, 170], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [220, 300], tide: ["low", "mid", "high"] },
+    surf: { quality: 0, swellDir: [45, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 300], tide: ["low", "mid", "high"] },
     hazards: "Rips. Nudist beach at the north end.",
     intel: [
       { text: "\"Diggers Beach in Coffs is an incredible beginner break.\"", src: "Reddit r/surfing \u2014 Surfing trip Australia (East Coast)", url: "https://www.google.com/search?q=site%3Areddit.com+%22Diggers+Beach+in+Coffs+is+an+incredible+beginner+break%22" },
@@ -429,7 +431,7 @@ export const SPOTS = [
     overnight: "Woolgoolga / Moonee Beach holiday parks.",
     facing: 45, terrain: "Large headland; in big southerly swell the waves peel off the point 300–400 m back into the beach.",
     shelterSwell: [[150, 220, 0.6]], shelterWind: [[150, 240, 0.7]],
-    surf: { swellDir: [60, 200], size: [2, 4], maxSize: 6, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, swellDir: [60, 200], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
     hazards: "Rocks off the point.",
     intel: [
       { text: "Works best in a large southerly swell when it's too big elsewhere; exceptionally long rides peeling off the point 300–400 m back to the beach. SE–E–NE swell, W/SW/S wind.", src: "Wannasurf — Sandy beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Banana_Coast/sandy_beach/index.html" },
@@ -448,7 +450,7 @@ export const SPOTS = [
     overnight: "Bermagui holiday parks; Murrah/Mimosa Rocks NP camping.",
     facing: 110, terrain: "Beach break in front of a rocky headland — rights and lefts.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [130, 190], swellDir: [90, 190], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [250, 320], tide: ["mid"] },
+    surf: { quality: 0, bestSwell: [130, 190], swellDir: [90, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [250, 320], tide: ["mid"] },
     hazards: "Rips. Laid-back local crew — don't hog waves.",
     intel: [
       { text: "All-surfers beach break; sit in front of the rocky headland, rights and lefts. Best S–SE swell with NW–SW wind, mid tide; handles some E–NE swell if wind is light/offshore.", src: "Wannasurf — Cuttagee", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/Cuttagee/index.html" },
@@ -463,7 +465,7 @@ export const SPOTS = [
     overnight: "Seven Mile Beach Holiday Park (Gerroa); Gerroa Boat Fishermans park.",
     facing: 160, terrain: "Long, gentle sand beach running south from Gerroa; Black Head shelters the north end.",
     shelterSwell: [[30, 100, 0.5]], shelterWind: [[20, 90, 0.5]],
-    surf: { bestSwell: [120, 160], swellDir: [100, 190], size: [1.5, 3.5], maxSize: 4, periodMin: 7, offshore: [280, 20], tide: ["low", "mid", "high"] },
+    surf: { quality: -1.0, bestSwell: [120, 160], swellDir: [100, 190], size: [3, 6], maxSize: 7, periodMin: 7, offshore: [280, 20], tide: ["low", "mid", "high"] },
     hazards: "Rips along the open beach.",
     intel: [
       { text: "Beginner wave — fast, fun, powerless; surf anywhere along the beach, all tides, plenty of space. Best SE swell with NW wind.", src: "Wannasurf — Gerroa", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/gerroa/index.html" },
@@ -479,7 +481,7 @@ export const SPOTS = [
     overnight: "Swansea / Belmont holiday parks.",
     facing: 110, terrain: "Beach break north of the Swansea Channel breakwall.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [60, 110], swellDir: [60, 150], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [250, 320], tide: ["mid"] },
+    surf: { quality: 0, bestSwell: [60, 110], swellDir: [60, 150], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [250, 320], tide: ["mid"] },
     hazards: "Sharks reported. Channel currents near the breakwall.",
     intel: [
       { text: "Newcastle locals: for beginners, Nobbys or \"further south is Blacksmiths — all other beaches are much more advanced\".", src: "Reddit r/newcastle — Surfing advice for Newcastle", url: "https://www.google.com/search?q=site%3Areddit.com+%22If+you%27re+a+beginner+Nobbys+or+further+south+Is+blacksmiths%22" },
@@ -497,7 +499,7 @@ export const SPOTS = [
     overnight: "Pacific Palms / Elizabeth Beach / Seal Rocks camping.",
     facing: 95, terrain: "Consistent beach break with good banks; point-like setup over reef at the south end; big northern headland.",
     shelterSwell: [[0, 40, 0.5]], shelterWind: [[0, 60, 0.6]],
-    surf: { swellDir: [70, 190], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [250, 320], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, swellDir: [70, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [250, 320], tide: ["low", "mid", "high"] },
     hazards: "South-end reef/rocks are for experienced surfers — stay on the beach banks. Some localism.",
     intel: [
       { text: "Very consistent; great beach-break banks along the whole beach. The northern headland protects it from summer nor'easters. South end reef only for fairly experienced surfers.", src: "Wannasurf — Boomerang beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/boomerang_beach/index.html" },
@@ -515,7 +517,7 @@ export const SPOTS = [
     overnight: "Scotts Head Holiday Park (beachfront).",
     facing: 30, terrain: "Right-hand point break wrapping into the north-facing bay; sand and rock.",
     shelterSwell: [[0, 30, 0.3]], shelterWind: [[150, 250, 0.8]],
-    surf: { swellDir: [70, 180], size: [2, 4], maxSize: 6, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, swellDir: [70, 180], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [180, 270], tide: ["low", "mid", "high"] },
     hazards: "Rocks off the point.",
     intel: [
       { text: "Point break for all surfers; works from under 3 ft on any tide, few surfers on weekends.", src: "Wannasurf — Scotts head", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/scotts_head/index.html" },
@@ -534,7 +536,7 @@ export const SPOTS = [
     overnight: "Arrawarra Beach Holiday Park; Woolgoolga.",
     facing: 50, terrain: "Long, soft point wall off Arrawarra Headland.",
     shelterSwell: [[150, 210, 0.4]], shelterWind: [[160, 250, 0.7]],
-    surf: { swellDir: [60, 160], size: [2, 4], maxSize: 6, periodMin: 8, offshore: [170, 270], tide: ["low", "mid"] },
+    surf: { quality: 0.4, swellDir: [60, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [170, 270], tide: ["low", "mid"] },
     hazards: "Rocks at the jump-off; sit on the shoulder if unsure. Some localism.",
     intel: [
       { text: "All surfers — fun, fairly powerless long walls; \"a very safe place to surf\" from 2 ft (low tide) up to 8–10 ft. Jump off the rocks from the track; SE–NE swell, W/SW/S wind, low–mid tide.", src: "Wannasurf — Arrawarra point", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Banana_Coast/arrawarra_point/index.html" },
@@ -1532,7 +1534,7 @@ export const SPOTS = [
     overnight: "Broulee / Barlings Beach holiday parks.",
     facing: 110, terrain: "Beach break on the south side of Broulee Head, running into Bengello Beach.",
     shelterSwell: [], shelterWind: [[20, 70, 0.5]],
-    surf: { bestSwell: [140, 200], swellDir: [90, 200], size: [2, 4], maxSize: 6, periodMin: 8, offshore: [250, 330], tide: ["low", "mid"] },
+    surf: { quality: 0.4, bestSwell: [140, 200], swellDir: [90, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [250, 330], tide: ["low", "mid"] },
     hazards: "Rips along Bengello.",
     intel: [
       { text: "\"South Broulee is pretty good though. The best waves on the south coast are from Bendalong to Bawley.\"", src: "Reddit r/surfing", url: "https://www.google.com/search?q=site%3Areddit.com+%22South+broulee+is+pretty+good%22" },
@@ -1548,7 +1550,7 @@ export const SPOTS = [
     overnight: "Bawley Point / Kioloa holiday parks; Murramarang NP camps.",
     facing: 60, terrain: "Reef point; the inside section is gentler.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [45, 100], swellDir: [30, 130], size: [2, 4], maxSize: 6, periodMin: 9, offshore: [210, 300], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.8, bestSwell: [45, 100], swellDir: [30, 130], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [210, 300], tide: ["low", "mid", "high"] },
     hazards: "Reef and boulders; strong current in south swells.",
     intel: [
       { text: "Good in most swells except south (too much current, no form); especially good in summer cyclone swells; \"inside section quite tame and good for beginners in smaller swell\".", src: "Wannasurf — Bawley Point", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/bawley_point/index.html" },
@@ -1566,11 +1568,182 @@ export const SPOTS = [
     overnight: "Pretty Beach campground (NPWS, right on the beach).",
     facing: 120, terrain: "Small beach break between rocky points.",
     shelterSwell: [], shelterWind: [],
-    surf: { bestSwell: [120, 170], swellDir: [80, 190], size: [2, 4], maxSize: 5, periodMin: 8, offshore: [240, 320], tide: ["low", "mid", "high"] },
+    surf: { quality: 0.4, bestSwell: [120, 170], swellDir: [80, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [240, 320], tide: ["low", "mid", "high"] },
     hazards: "Rocks at both ends.",
     intel: [
       { text: "Regional classic for all surfers; best on SE swell with W wind; \"never really crowded\" because the campground basically owns the beach; \"a good powerful lip when the waves are over 3 foot\".", src: "Wannasurf — Pretty beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/pretty_beach/index.html" },
       { text: "Reddit spearos also rate the rocks here: \"mystery bay! .. or maybe depot/pretty\".", src: "Reddit r/Spearfishing", url: "https://www.google.com/search?q=site%3Areddit.com+%22depot%2Fpretty%22" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  // ---------------- Quality breaks for confident surfers (to ~6 ft), from Wannasurf guides ----------------
+  {
+    id: "sandon-point", type: "surf", name: "Sandon Point (Bulli)",
+    region: "Shoalhaven/Illawarra", lat: -34.3285, lon: 150.929, tide: "A",
+    access: { lat: -34.3262, lon: 150.9238, note: "Car park beside the bike track at the end of Point St, Bulli; walk down and jump off the rocks." },
+    overnight: "Bulli Beach Tourist Park (council, right there).",
+    facing: 110, terrain: "Classic right-hand point over flat rock.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.8, bestSwell: [150, 200], swellDir: [100, 210], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [230, 300], tide: ["mid"] },
+    hazards: "Rocks at the take-off and jump-off; heavy localism — sit wide and wait your turn.",
+    intel: [
+      { text: "World-class, very consistent right point (≈150 days a year), best on a S swell, SW wind, mid tide; \"from 1 to 5ft is good\"; long rides on bigger days.", src: "Wannasurf — Sandon point", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Coal_Coast/sandon_point/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "minnamurra", type: "surf", name: "Minnamurra rivermouth",
+    region: "Shoalhaven/Illawarra", lat: -34.6275, lon: 150.8605, tide: "A",
+    access: { lat: -34.624, lon: 150.8545, note: "Minnamurra beach car park (Beach St); paddle across to the bank." },
+    overnight: "Kiama / Minnamurra holiday parks; Killalea campground.",
+    facing: 70, terrain: "Sand banks at the river mouth — rights and lefts.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.8, bestSwell: [140, 190], swellDir: [100, 210], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [170, 250], tide: ["low", "mid", "high"] },
+    hazards: "River-mouth rips; dirty water after rain.",
+    intel: [
+      { text: "Rated world class for hollow, fast, powerful sand banks; S-quarter swells; \"Don't go in anything that has north in it, only southerlies give it that offshore-ness\"; empty on weekdays.", src: "Wannasurf — Minamurra", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/minamurra/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "north-bendalong", type: "surf", name: "North Bendalong",
+    region: "South Coast", lat: -35.241, lon: 150.5355, tide: "A",
+    access: { lat: -35.2445, lon: 150.5315, note: "Car park beside the Bendalong caravan park at the end of the road; follow the track." },
+    overnight: "Bendalong Point holiday park; Inyadda / Manyana parks.",
+    facing: 100, terrain: "Swell-magnet beach break with rock — rights and lefts.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [130, 190], swellDir: [70, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [270, 15], tide: ["low", "mid", "high"] },
+    hazards: "Rips.",
+    intel: [
+      { text: "\"A deadset swell magnet — it picks up any hint of southerly to easterly swell\"; very consistent, hollow, fast and powerful; holds big swell.", src: "Wannasurf — North bendalong", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/South_Coast/north_bendalong/index.html" },
+      { text: "\"The best waves on the south coast are from Bendalong to Bawley.\"", src: "Reddit r/surfing", url: "https://www.google.com/search?q=site%3Areddit.com+%22bendalong+to+bawley%22" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "merimbula-bar", type: "surf", name: "Merimbula Bar",
+    region: "Far South Coast", lat: -36.9005, lon: 149.926, tide: "A",
+    access: { lat: -36.8987, lon: 149.9275, note: "Merimbula Aquarium car park (Lake St) — you can see the wave from there." },
+    overnight: "Merimbula holiday parks.",
+    facing: 140, terrain: "Long sand-bar left at the lake entrance — fickle but a classic when on.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.6, bestSwell: [120, 170], swellDir: [90, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [300, 50], tide: ["low", "mid"] },
+    hazards: "Crowded when it's on; channel current.",
+    intel: [
+      { text: "\"One of Australia's classic lefthanders, but it is extremely fickle … when it gets good, it is an absolute joy to surf\"; SE swell, NW/NE wind, low–mid tide; gets crowded.", src: "Wannasurf — Merimbula bar", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/merimbula_bar/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "moruya-rivermouth", type: "surf", name: "Moruya Heads rivermouth",
+    region: "Far South Coast", lat: -35.908, lon: 150.155, tide: "A",
+    access: { lat: -35.9135, lon: 150.152, note: "Shelly Beach, Moruya Heads — look NW to the rock wall (or North Head on the other side)." },
+    overnight: "Moruya Heads / Broulee holiday parks.",
+    facing: 75, terrain: "Sand banks beside the breakwall; \"the wall\" wedge on the other side.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [70, 150], swellDir: [40, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [200, 290], tide: ["low", "mid"] },
+    hazards: "Rips at the mouth; a 10-minute paddle from Shelly Beach.",
+    intel: [
+      { text: "\"This spot is epic on good conditions. At high tide it goes fat\"; SE–E–NE swell, SW wind, low–mid falling tide; if crowded, \"the wall\" wedge on the other side is just as good.", src: "Wannasurf — Moruya rivermouth", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Far_South/moruya_rivermouth/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [
+      { when: { tide: "high" }, then: { surf: -1 }, why: "Local: goes fat and mostly unsurfable at high tide.", src: "Wannasurf guide" },
+    ],
+  },
+  {
+    id: "north-avoca", type: "surf", name: "North Avoca",
+    region: "Central Coast/Newcastle", lat: -33.456, lon: 151.4385, tide: "A",
+    access: { lat: -33.459, lon: 151.436, note: "North Avoca SLSC (Tramway Dr) car park." },
+    overnight: "Avoca / Terrigal holiday parks.",
+    facing: 105, terrain: "Beach break with a point and back reef at the north end.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [80, 150], swellDir: [50, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [240, 330], tide: ["low", "mid", "high"] },
+    hazards: "Watch the big rock near the point; dangerous in 6 ft+ south swell.",
+    intel: [
+      { text: "Very consistent; \"a great pit, good shories, it wedges and sometimes has mad bowls\"; good reef just around the point; \"the beach is dangerous in anything 6ft+ on a south swell\".", src: "Wannasurf — North avoca", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Central/north_avoca/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [
+      { when: { swellDir: [150, 210], swellMin: 2 }, then: { surf: -1.5 }, why: "Local: dangerous in a 6 ft+ south swell.", src: "Wannasurf guide" },
+    ],
+  },
+  {
+    id: "bar-beach-newcastle", type: "surf", name: "Bar Beach (Newcastle)",
+    region: "Central Coast/Newcastle", lat: -32.9419, lon: 151.769, tide: "A",
+    access: { lat: -32.94, lon: 151.766, note: "Bar Beach car park (Memorial Dr)." },
+    overnight: "Newcastle / Stockton holiday parks.",
+    facing: 110, terrain: "Very consistent left off Bar Beach point plus beach peaks.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [100, 180], swellDir: [40, 200], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 320], tide: ["low", "mid", "high"] },
+    hazards: "Busy city beach.",
+    intel: [
+      { text: "\"Bar Beach Point is a lovely left hander which is very consistent\"; S/E/NE swell, NW–SW wind, all tides.", src: "Wannasurf — Bar beach", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Newcastle/bar_beach/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "tuncurry-breakwall", type: "surf", name: "Tuncurry breakwall",
+    region: "Port Stephens/Great Lakes", lat: -32.1745, lon: 152.509, tide: "A",
+    access: { lat: -32.1735, lon: 152.504, note: "Off Beach St, Tuncurry — road beside the boat wharf to the breakwall car park." },
+    overnight: "Tuncurry / Forster holiday parks.",
+    facing: 95, terrain: "Sand banks beside the Tuncurry breakwall at the south end of Nine Mile Beach.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [110, 160], swellDir: [60, 190], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [250, 320], tide: ["low", "mid"] },
+    hazards: "Rocks by the wall; car break-ins in holidays.",
+    intel: [
+      { text: "Very consistent, hollow, fast and powerful; SE swell with NW/W wind; \"When the direction of the wind is just right and at low tide … this spot goes off.\"", src: "Wannasurf — Tuncurry breakwall", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/tuncurry_breakwall/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "north-haven", type: "surf", name: "North Haven (Camden Haven wall)",
+    region: "Mid North Coast", lat: -31.636, lon: 152.8215, tide: "A",
+    access: { lat: -31.6355, lon: 152.817, note: "End of North Haven, just past the caravan park." },
+    overnight: "North Haven / Dunbogan holiday parks; Diamond Head campground.",
+    facing: 95, terrain: "Right-handers off the Camden Haven breakwall.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [30, 90], swellDir: [20, 160], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [230, 310], tide: ["low", "mid"] },
+    hazards: "River-mouth rips.",
+    intel: [
+      { text: "Very consistent; \"strong north easterly swell produce magical rights on the breakwall, low tide produces real hollow fast waves\"; relaxed crowd.", src: "Wannasurf — North haven", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/north_haven/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "horseshoe-bay-swr", type: "surf", name: "Horseshoe Bay (South West Rocks)",
+    region: "Mid North Coast", lat: -30.8826, lon: 153.041, tide: "A",
+    access: { lat: -30.884, lon: 153.0395, note: "Horseshoe Bay car park, South West Rocks." },
+    overnight: "South West Rocks holiday parks; Trial Bay Gaol campground.",
+    facing: 10, terrain: "North-facing bay with several peaks — wraps in a big south swell.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [140, 200], swellDir: [90, 210], size: [3, 6], maxSize: 7, periodMin: 9, offshore: [150, 250], tide: ["low", "mid", "high"] },
+    hazards: "Rocks at the ends; keep the locals happy.",
+    intel: [
+      { text: "Very consistent multi-peak bay that comes alive in a solid S swell (needs 6–8 ft outside); \"a very good spot — beginners to pros, it all depends on the swell\".", src: "Wannasurf — Horseshoe bay", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/horseshoe_bay/index.html" },
+    ],
+    conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
+    rules: [],
+  },
+  {
+    id: "delicate-nobby", type: "surf", name: "Delicate Nobby (Crescent Head)",
+    region: "Mid North Coast", lat: -31.2585, lon: 152.9725, tide: "A",
+    access: { lat: -31.2605, lon: 152.9684, note: "Delicate Nobby campground, Point Plomer Rd (south of Crescent Head) — gravel road." },
+    overnight: "Delicate Nobby campground (on the beach).",
+    facing: 100, terrain: "Beach break; best near the northern point.",
+    shelterSwell: [], shelterWind: [],
+    surf: { quality: 0.4, bestSwell: [70, 150], swellDir: [40, 170], size: [3, 6], maxSize: 7, periodMin: 8, offshore: [220, 320], tide: ["low", "mid", "high"] },
+    hazards: "Remote; gravel access road.",
+    intel: [
+      { text: "\"Surf near the northern point of the beach, on a good day you will get big long barrels\"; went for Crescent, \"set up at Delicate Nobby, best decision we made, was the best beach break the whole time\".", src: "Wannasurf — Delicate Nobby", url: "https://www.wannasurf.com/spot/Australia_Pacific/Australia/NSW/Mid_North_Coast/Delicate_Nobby/index.html" },
     ],
     conf: { coords: "low", access: "med", shelter: "med", intel: "med" },
     rules: [],
