@@ -271,7 +271,8 @@ function renderPlan() {
     </article>`;
   }).join("");
   $("#plan").innerHTML = `<section class="hsec"><h2>You + Seb · 21–25 Oct</h2>
-    <small class="hint">Updates itself with every forecast. Days the forecast doesn't reach yet use each spot's base quality.</small></section>${days}`;
+    <small class="hint">Updates itself with every forecast. Does north and south unless one side is terrible the whole time. Days the forecast doesn't reach yet use each spot's base quality.</small>
+    ${P.skipped ? `<p class="pnote">Skipping the ${P.skipped} coast — the forecast there is terrible for the whole trip.</p>` : ""}</section>${days}`;
 }
 
 // ---------- spot sheet ----------

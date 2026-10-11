@@ -2,7 +2,7 @@
 //  21–25: Jacob + Seb — best surf + spearing (spearing counts a bit more). Night 1 is always a powered site (charge the van).
 //  26–30: the other two join (meet them wherever suits) — same goal: the best surf + spearing for Jacob + Seb.
 //  31: morning session, back at Bankstown by 2pm.
-// Never more than 2 nights in any one area (30 km) over the whole trip, unless the forecast there is insane (a 9+ session).
+// Both coasts (2+ nights each) unless one is terrible for the whole forecast. Never more than 2 nights in any one area (30 km) over the whole trip, unless the forecast there is insane (a 9+ session).
 // Every night's camp is picked together (beam search over routes) so the sessions around it score as high
 // as possible, minus the cost of driving. Days: morning session near last night's camp → drive → arvo session near tonight's.
 // Uses the forecast where it reaches; days it doesn't reach yet use each spot's base quality. Re-plans on every refresh.
@@ -79,12 +79,29 @@ export function makePlan(dayResults) {
 
   // night 1 = a powered site (caravan park or a camp with power) so the van's batteries start the trip full
   const powered = c => c.kind === "park" || !!c.f?.power;
+  // Do both coasts: at least 2 nights north of Sydney and 2 south — unless the forecast says one side is terrible the
+  // whole time (it covers 6+ trip days and that side's best session never reaches 4/10, surf or dive).
+  const sideOf = c => (c.lat > -33.6 ? "N" : c.lat < -34.0 ? "S" : null);
+  const fcDays = [...NIGHTS, TRIP.end].filter(d => resFor[d]);
+  const terrible = side => fcDays.length >= 6 && fcDays.every(d => {
+    const res = resFor[d];
+    return !SPOTS.some(sp => sideOf(sp) === side && res[sp.id] && !res[sp.id].best?.no && (res[sp.id].best?.score ?? 0) >= 4);
+  });
+  const need = { N: terrible("N") ? 0 : 2, S: terrible("S") ? 0 : 2 };
+  if (!need.N && !need.S) { need.N = 2; need.S = 2; } // both bad: still split it
+  const short = (nN, nS) => Math.max(0, need.N - nN) + Math.max(0, need.S - nS);
+
   // Beam search over routes (keeps the best few hundred part-routes each night). A route may spend at most 2 nights in
   // any one area (camps within 30 km) over the whole trip — a 3rd only when the forecast there is insane.
-  const AREA_KM = 30, BEAM = 300, PER_CAMP = 3;
+  const AREA_KM = 30, BEAM = 400, PER_CAMP = 3;
   const near = camps.map(a => camps.map(b => km(a, b) < AREA_KM));
+  const side = camps.map(sideOf);
   let beam = [];
-  camps.forEach((c, i) => { if (home[i] <= FIRST_MAX && powered(c)) beam.push({ r: [i], v: val[0][i] - DRIVE_COST * home[i] / 60 }); });
+  camps.forEach((c, i) => {
+    if (home[i] > FIRST_MAX || !powered(c)) return;
+    const nN = side[i] === "N" ? 1 : 0, nS = side[i] === "S" ? 1 : 0;
+    if (short(nN, nS) <= K - 1) beam.push({ r: [i], v: val[0][i] - DRIVE_COST * home[i] / 60, nN, nS });
+  });
   for (let k = 1; k < K; k++) {
     const next = [];
     for (const p of beam) {
@@ -95,19 +112,23 @@ export function makePlan(dayResults) {
         if (camps[j].kind === "rest" && km(camps[i], camps[j]) < 3) continue; // rest areas: one night only (incl. the other side of the road)
         let nights = 0; for (const x of p.r) if (near[x][j]) nights++;
         if (nights >= 2 && !insane[k][j]) continue;
-        next.push({ r: p.r, j, v: p.v - DRIVE_COST * drive / 60 + val[k][j] });
+        const nN = p.nN + (side[j] === "N" ? 1 : 0), nS = p.nS + (side[j] === "S" ? 1 : 0);
+        if (short(nN, nS) > K - 1 - k) continue; // can't fit both coasts in any more
+        next.push({ p, j, nN, nS, v: p.v - DRIVE_COST * drive / 60 + val[k][j] });
       }
     }
     next.sort((a, b) => b.v - a.v);
     const per = new Map(); beam = [];
     for (const x of next) {
-      const c = per.get(x.j) || 0; if (c >= PER_CAMP) continue;
-      per.set(x.j, c + 1); beam.push({ r: [...x.r, x.j], v: x.v });
+      const key = `${x.j}|${Math.min(x.nN, 2)}|${Math.min(x.nS, 2)}`;
+      const c = per.get(key) || 0; if (c >= PER_CAMP) continue;
+      per.set(key, c + 1); beam.push({ r: [...x.p.r, x.j], v: x.v, nN: x.nN, nS: x.nS });
       if (beam.length >= BEAM) break;
     }
     if (!beam.length) return { days: [], covered: 0 };
   }
   const route = beam[0].r;
+  const skipped = !need.N ? "north" : !need.S ? "south" : null;
 
   // spell the days out
   const days = [];
@@ -131,7 +152,7 @@ export function makePlan(dayResults) {
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
     notes: [`Leave by ${leave} — van back in Bankstown at 2pm (~${Math.round(backMin / 6) / 10} h).`] });
-  return { days, covered };
+  return { days, covered, skipped };
 }
 
 export { KIND };
