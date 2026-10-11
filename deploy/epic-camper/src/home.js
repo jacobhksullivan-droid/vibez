@@ -76,7 +76,7 @@ export function renderHome(ctx) {
   const [fl, ss] = (t?.light || "").split(" – ");
   const tile = (label, val, cap) => (val ? `<div><small>${label}</small><b>${esc(val.replace(/(am|pm)$/, "<i>$1</i>")).replace(/&lt;(\/?)i&gt;/g, "<$1i>")}</b><span>${esc(cap || "")}</span></div>` : "");
   const today_ = t ? `<section class="hsec"><h2>Today · ${esc(t.where)}</h2><div class="tinfo three">
-    ${tile("First light", fl)}${tile("Sunset", ss)}${tile("Water", t.water, t.coast.replace(" along the coast", " coast"))}
+    ${tile("First light", fl)}${tile("Sunset", ss)}${tile("Water", t.water)}
   </div></section>` : "";
 
   // BOM warnings, one line per warning type + coast: "Strong wind · Coffs Coast · Fri, Sat"
@@ -85,7 +85,7 @@ export function renderHome(ctx) {
     const m = w.text.match(/^(.*?) Warning for (\w+) for (.*)$/i); if (!m) continue;
     const k = `${m[1]}|${m[3]}`; if (!wg.has(k)) wg.set(k, new Set()); wg.get(k).add(m[2].slice(0, 3));
   }
-  const warn = wg.size ? `<section class="hsec"><div class="warnbox">${[...wg].map(([k, d]) => { const [type, coast] = k.split("|"); return `<p>⚠ ${esc(type)} · ${esc(coast.replace(/ Coast$/, ""))} · ${[...d].join(", ")}</p>`; }).join("")}<small>BOM marine warnings</small></div></section>` : "";
+  const warn = wg.size ? `<section class="hsec"><details class="warnbox"><summary>⚠ ${wg.size} BOM marine warning${wg.size > 1 ? "s" : ""}</summary>${[...wg].map(([k, d]) => { const [type, coast] = k.split("|"); return `<p>${esc(type)} · ${esc(coast.replace(/ Coast$/, ""))} · ${[...d].join(", ")}</p>`; }).join("")}</details></section>` : "";
   // where to sleep tonight: camps ranked by tomorrow morning's surf/spear within ~35 min
   let camp = "";
   if (tomorrow && ctx.campsFor) {

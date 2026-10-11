@@ -402,3 +402,9 @@ details.sharkbox summary { cursor: pointer; font: 500 .85rem var(--mono); list-s
 details.sharkbox summary::-webkit-details-marker { display: none; }
 details.sharkbox summary::after { content: " ›"; color: var(--muted); }
 details.sharkbox[open] summary::after { content: " ⌄"; }
+
+details.warnbox summary { cursor: pointer; font: 500 .9rem var(--mono); list-style: none; }
+details.warnbox summary::-webkit-details-marker { display: none; }
+details.warnbox summary::after { content: " ›"; color: var(--muted); }
+details.warnbox[open] summary::after { content: " ⌄"; }
+details.warnbox[open] summary { margin-bottom: 6px; }
