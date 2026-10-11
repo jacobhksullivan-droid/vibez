@@ -13,11 +13,11 @@ export const WEIGHTS = {
 
 export const LIMITS = {
   calmSpot: 1.2,      // m of swell reaching a spear spot that uses up all the "energy" points
-  rainBad: 15,        // mm of "runoff" (decayed rain × river influence) that wipes out the rain points
-  rainCaps: [[10, 6], [20, 4], [35, 2]], // runoff mm → spear score cap (dirty / very dirty / river in flood)
-  rainDayBefore: 10,  // mm in the previous 24 h: from here the water's dirty/sewage-y for a surf too
-  // any heavy dump in the last few days muddies the water even with no river nearby: [hours back, mm, spear score cap]
-  rainRecentCaps: [[72, 15, 6], [48, 15, 4], [48, 30, 2]],
+  // Rain → dirty water is smooth, no cut-offs. "wet" = recent rain, heavy bursts counting extra, fading with a half-life
+  // that depends on what drains onto the spot (open coast fast, big rivers for days), × how exposed the spot is.
+  rainScale: 10,      // wet at which the dive's rain points are down to ~37 %
+  rainCapScale: 14,   // how fast the best possible dive score falls with wet (10 → ~5.8 at wet 10, ~3.9 at 20, ~2.4 at 40)
+  surfRainScale: 20,  // short-term runoff at which a surf has lost ~60 % of its dirty-water knock (max −1.5)
   trendBad: 1.2,      // m: rough water at the spot in the last 48 h above this kills the trend points
   gustDanger: 30,     // kn gusts: cap spear scores at 2
   chopWind: 12,       // kn of unsheltered wind before spear chop penalty starts
@@ -211,12 +211,14 @@ export function hourCtx(spot, fc, i) {
   for (let k = i - 1; k >= i - 168; k--) { const r = rainH(k); rain7d += r; if (k >= i - 72) rain72 += r; if (k >= i - 24) rain24 += r; if (k >= i - 48) rain48 += r; }
   // runoff memory: rain fades from the water faster near a creek than near a big river (half-life in hours)
   const rv = spot.spear?.river, half = !rv ? 30 : { large: 120, med: 72, small: 48 }[rv.size] ?? 60;
-  let runoff = 0; for (let k = i - 1; k >= i - 168; k--) runoff += rainH(k) * 0.5 ** ((i - k) / half);
+  // heavy bursts count extra (a 10 mm hour ≈ 2.5× its face value; drizzle ≈ face value)
+  let runoff = 0, runoffShort = 0;
+  for (let k = i - 1; k >= i - 168; k--) { const r = rainH(k), e = r * (1 + r / 6.7); runoff += e * 0.5 ** ((i - k) / half); runoffShort += e * 0.5 ** ((i - k) / 12); }
   return {
     i, time: fc.time[i], date, hour: +fc.time[i].slice(11, 13),
     hs: fc.hs[i] ?? 0, parts, dom: dominant(parts),
     wspd: fc.wspd[i] ?? 0, wdir: fc.wdir[i] ?? 0, gust: fc.gust[i] ?? 0,
-    rain72, rain7d, rain24, rain48, runoff, sst: fc.sst[i], cur: fc.cur?.[i] ?? null, curDir: fc.curDir?.[i] ?? null, tide: tideFor(spot, fc, date),
+    rain72, rain7d, rain24, rain48, runoff, runoffShort, sst: fc.sst[i], cur: fc.cur?.[i] ?? null, curDir: fc.curDir?.[i] ?? null, tide: tideFor(spot, fc, date),
   };
 }
 function tideText(t) {
@@ -257,10 +259,10 @@ function spearSide(spot, side, sideIdx, c, maxRecent, lead) {
   const rv = P.river;
   const sizeK = rv ? { large: 1, med: 0.75, small: 0.5 }[rv.size] ?? 0.6 : 0;
   const distK = rv ? (rv.km < 1 ? 1 : rv.km < 3 ? 0.8 : rv.km < 8 ? 0.5 : 0.3) : 0;
-  const riverK = 0.35 + 0.65 * sizeK * distK;
+  const riverK = 0.65 + 0.35 * sizeK * distK; // open coast still gets plenty of creek/stormwater runoff
   // rain is the biggest thing for vis: decayed runoff × how close/big the river is
   const wet = c.runoff * riverK;
-  const rainPts = W.rain * (1 - clamp(wet / LIMITS.rainBad));
+  const rainPts = W.rain * Math.exp(-wet / LIMITS.rainScale);
   parts.push({ tag: "rain", text: `${Math.round(c.rain72)} mm rain in 3 days, ${Math.round(c.rain7d)} mm in 7${rv ? ` (${rv.name} ${rv.km} km${rv.size === "large" ? " — big river, runoff lasts days" : ""})` : ""}`, pts: rainPts, max: W.rain });
 
   // 5. trend: was it rough here in the last 48 h?
@@ -280,11 +282,10 @@ function spearSide(spot, side, sideIdx, c, maxRecent, lead) {
 
   let score = shelterPts + energyPts + rainPts + trendPts + tidePts + kPts;
   score += sharkPenalty(spot, c, "spear", parts);
-  const rc = LIMITS.rainCaps.filter(([mm]) => wet >= mm).pop();
-  if (rc) { score = Math.min(score, rc[1]); parts.push({ tag: "rain", text: rc[1] <= 2 ? `heavy rain — ${rv ? rv.name : "runoff"} likely in flood, vis near nil` : rc[1] <= 4 ? "lots of recent rain — water likely dirty" : "recent rain — expect some dirty water", cap: rc[1] }); }
   score = applyRules(spot, "spear", sideIdx, c, score, parts);
-  const rr = LIMITS.rainRecentCaps.filter(([h, mm]) => (h === 48 ? c.rain48 : c.rain72) >= mm).sort((a, b) => a[2] - b[2])[0];
-  if (rr) { score = Math.min(score, rr[2]); parts.push({ tag: "rain", text: `${Math.round(rr[0] === 48 ? c.rain48 : c.rain72)} mm of rain in the last ${rr[0] / 24} days — vis will suffer`, cap: rr[2] }); }
+  // the best a dive can be after rain slides down smoothly with how dirty the water is
+  const rainCap = 10 - 8 * (1 - Math.exp(-wet / LIMITS.rainCapScale));
+  if (rainCap < 9.5 && score > rainCap) { score = rainCap; parts.push({ tag: "rain", text: wet > 30 ? `heavy recent rain — ${rv ? rv.name : "runoff"} pouring dirty water out, vis near nil` : wet > 12 ? "recent rain — water likely dirty" : "a bit of recent rain — some dirty water", cap: Math.round(rainCap * 10) / 10 }); }
   if (c.cur != null && c.cur > LIMITS.strongCurrent) { score = Math.min(score, 4); parts.push({ tag: "safety", text: `strong current (~${r1(c.cur * 0.54)} kn)`, cap: 4 }); }
   if (c.gust > LIMITS.gustDanger) { score = Math.min(score, 2); parts.push({ tag: "safety", text: `gusts ${Math.round(c.gust * 1.151)} mph`, cap: 2 }); }
 
@@ -314,10 +315,10 @@ export function spearHour(spot, fc, i, recentBySide, lead) {
 }
 
 // ---------------- SURF ----------------
-// a heavy dumping in the 24 h before: the water's dirty for a surf too (rain while you're out doesn't matter)
+// a heavy dumping just before: the water's dirty for a surf too, fading over ~a day (rain while you're out doesn't matter)
 function rainPenalty(c, parts) {
-  if (c.rain24 < LIMITS.rainDayBefore) return 0;
-  const p = Math.min(1.5, 0.5 + (c.rain24 - LIMITS.rainDayBefore) / 20);
+  const p = 1.5 * (1 - Math.exp(-c.runoffShort / LIMITS.surfRainScale));
+  if (p < 0.2) return 0;
   parts.push({ tag: "rain", text: `${Math.round(c.rain24)} mm of rain in the last 24 h — dirty water`, pts: -p });
   return -p;
 }
