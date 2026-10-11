@@ -1,5 +1,5 @@
 // App shell: Home, Map, Outlook and List views, plus the spot sheet.
-import { SPOTS } from "../data/spots.js";
+import { SPOTS, REGIONS } from "../data/spots.js";
 import { loadForecast, forecastDays } from "./data.js";
 import { scoreSpotDay, scoreHourAt, bestTime, setSharks, sharksNear, WINDOWS, fmtTime, card, ft } from "./score.js";
 import { correct, zoneOf } from "./correct.js";
@@ -246,9 +246,46 @@ function warnings() {
   for (const [aac, zone] of Object.entries(z)) if (aac !== "NSW_MW008") for (const p of zone.periods.slice(0, 2)) if (p.marine_forecast && /warning/i.test(p.marine_forecast)) out.push({ aac, text: p.marine_forecast });
   return out;
 }
-const ctx = () => ({ today: todayStr(), days: state.days, dayResults, drive: state.drive, maxDrive: state.maxDrive, colour, fmtScore, esc, todayInfo: todayInfo(), locOff: state.locOff && !state.origin, bestOf, bestLabel, sharkIcon, warnings: warnings(), campsFor, KIND, facilities, dirUrl });
+const ctx = () => ({ today: todayStr(), days: state.days, dayResults, drive: state.drive, maxDrive: state.maxDrive, colour, fmtScore, esc, todayInfo: todayInfo(), locOff: state.locOff && !state.origin, bestOf, bestLabel, sharkIcon, warnings: warnings(), campsFor, KIND, facilities, dirUrl, rainByArea: rainByArea(), rainTint });
 function renderHomeView() { $("#home").innerHTML = state.data ? renderHome(ctx()) : `<p class="note">Loading forecast…</p>`; }
 function renderOutlookView() { $("#outlook").innerHTML = state.data ? renderOutlook(ctx()) : `<p class="note">Loading forecast…</p>`; }
+
+
+// ---------- rain ----------
+// daily rain (mm) for a spot: the forecast series plus the 4 days of history kept in rainPre
+function dailyRain(fc) {
+  const out = new Map();
+  fc.time.forEach((t, i) => { const d = t.slice(0, 10); out.set(d, (out.get(d) || 0) + (fc.rain[i] || 0)); });
+  const pre = fc.rainPre || [], t0 = Date.parse(fc.time[0] + fc.tz);
+  pre.forEach((r, k) => { const d = new Date(t0 - (pre.length - k) * 36e5 + 11 * 36e5).toISOString().slice(0, 10); out.set(d, (out.get(d) || 0) + (r || 0)); });
+  return out;
+}
+const shiftDay = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+const rainTint = mm => (mm < 2 ? "var(--s9)" : mm < 10 ? "var(--s5)" : mm < 25 ? "var(--s3)" : "var(--s1)");
+// rain by area for Home: last 3 days, today, next 3 days (average of the spots in each region)
+function rainByArea() {
+  if (!state.data) return [];
+  const today = todayStr();
+  return REGIONS.map(reg => {
+    const ds = SPOTS.filter(s => s.region === reg && state.data.spots[s.id]).map(s => dailyRain(state.data.spots[s.id]));
+    if (!ds.length) return null;
+    const avg = d => ds.reduce((a, m) => a + (m.get(d) || 0), 0) / ds.length;
+    const sum = (a, b) => { let x = 0; for (let n = a; n <= b; n++) x += avg(shiftDay(today, n)); return x; };
+    return { region: reg, past: sum(-3, -1), today: avg(today), next: sum(1, 3) };
+  }).filter(Boolean);
+}
+
+// 7-day rain strip on a spot page: 3 days before the chosen day → 3 days after
+function rainStrip(fc, day) {
+  const m = dailyRain(fc), today = todayStr();
+  const cells = [-3, -2, -1, 0, 1, 2, 3].map(n => {
+    const d = shiftDay(day, n), mm = m.get(d);
+    if (mm == null) return "";
+    const lbl = d === today ? "Today" : new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short" });
+    return `<span class="rday${d === day ? " on" : ""}"><small>${lbl}</small><b style="--c:${rainTint(mm)}">${mm < 0.5 ? 0 : Math.round(mm)}</b></span>`;
+  }).join("");
+  return `<div class="rainbox"><small>Rain (mm)</small><div class="rstrip">${cells}</div></div>`;
+}
 
 // ---------- trip plan ----------
 function renderPlan() {
@@ -343,6 +380,7 @@ function openSheet(id, winLabel) {
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
     ${table}
     <div class="tidebox"><small>Tide</small>${tideGraph(s, fcs, state.day, win)}</div>
+    ${rainStrip(fcs, state.day)}
     <a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>
     <details class="more"><summary>Spot info</summary>${info}${rules ? `<p class="sub">Local rules</p><ul>${rules}</ul>` : ""}${intel ? `<p class="sub">Local intel</p><ul>${intel}</ul>` : ""}</details>
     ${bom}${camps}

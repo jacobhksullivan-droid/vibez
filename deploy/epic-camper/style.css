@@ -445,3 +445,15 @@ body { text-shadow: none; }
 .iconbtn { color: #fff; }
 .pleg { font: 600 .82rem var(--body); color: var(--muted); margin: 18px 2px 0; }
 .pday.social { border-left: 1px solid var(--glass-edge); }
+/* rain */
+.hcard.rainarea { display: grid; grid-template-columns: 1fr; gap: 4px; cursor: default; padding: 10px 12px; }
+.rrow { display: grid; grid-template-columns: 1fr 64px 52px 64px; gap: 6px; align-items: center; font-size: .85rem; }
+.rrow.rhead small { color: var(--muted); font-size: .66rem; text-align: center; }
+.rrow b, .rday b { text-align: center; font-weight: 700; border-radius: 10px; padding: 3px 0; color: #08263f; background: var(--c); }
+.rainbox { display: grid; gap: 6px; padding: 10px 12px; border-radius: 18px; background: var(--bg); border: 1px solid var(--line); }
+.rainbox > small { color: var(--muted); font-size: .68rem; font-weight: 600; }
+.rstrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.rday { display: grid; gap: 2px; text-align: center; }
+.rday small { color: var(--muted); font-size: .62rem; }
+.rday.on small { color: var(--ink); font-weight: 700; }
+.rday.on b { box-shadow: 0 0 0 2px rgba(255,255,255,.7); }

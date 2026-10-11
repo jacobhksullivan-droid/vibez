@@ -106,5 +106,12 @@ export function renderHome(ctx) {
     }).join("")}</section>` : "";
   }
   const loc = ctx.locOff ? `<section class="hsec"><div class="warnbox locoff"><p>📍 Turn on location to see spots near you</p><small>iPhone: Settings → Privacy & Security → Location Services → Safari Websites → While Using the App. Then reopen the app.</small></div></section>` : "";
-  return loc + warn + today_ + block(nowTitle, nowSlots, false) + camp + block("Best in the next 24 hours", [...best24.values()], true);
+  // rain by area: what's fallen (vis!) and what's coming
+  const ra = ctx.rainByArea || [];
+  const mm = x => (x < 0.5 ? "0" : Math.round(x));
+  const rain = ra.length ? `<section class="hsec"><h2>Rain by area (mm)</h2><div class="hcard rainarea">
+    <div class="rrow rhead"><span></span><small>Last 3 days</small><small>Today</small><small>Next 3 days</small></div>
+    ${ra.map(r => `<div class="rrow"><span>${esc(r.region)}</span><b style="--c:${ctx.rainTint(r.past)}">${mm(r.past)}</b><b style="--c:${ctx.rainTint(r.today)}">${mm(r.today)}</b><b style="--c:${ctx.rainTint(r.next)}">${mm(r.next)}</b></div>`).join("")}
+  </div></section>` : "";
+  return loc + warn + today_ + rain + block(nowTitle, nowSlots, false) + camp + block("Best in the next 24 hours", [...best24.values()], true);
 }
