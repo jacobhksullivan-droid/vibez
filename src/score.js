@@ -8,7 +8,7 @@ import { tideAt, tideEventsOn, SPRINGS } from "../data/tides.js";
 // Tide is a big factor: spear is best within ~2 h either side of high; surf follows each spot's preferred tide.
 export const WEIGHTS = {
   spear: { shelter: 3.5, energy: 1.6, rain: 2.5, trend: 0.7, tide: 1.3, kingfish: 0.4 },
-  surf: { size: 3.2, period: 1.8, wind: 2.7, dir: 0.8, tide: 1.5 },
+  surf: { size: 3.0, period: 1.6, wind: 2.6, dir: 1.3, tide: 1.5 },
 };
 
 export const LIMITS = {
@@ -110,6 +110,7 @@ function ruleMatches(w, c, sideIdx, rule) {
   if (w.periodMax != null && c.dom.T > w.periodMax) return false;
   if (w.windDir && !inArc(c.wdir, w.windDir[0], w.windDir[1])) return false;
   if (w.windMax != null && c.wspd > w.windMax) return false;
+  if (w.sstMin != null && !(c.sst >= w.sstMin)) return false;
   if (w.tide) {
     const t = c.tide; if (!t) return false;
     if (w.tide === "rising" && !t.rising) return false;
@@ -331,9 +332,11 @@ export function surfHour(spot, fc, i) {
   const windWord = c.wspd < 5 ? "glassy" : offshore ? "offshore" : ws > 0.6 ? "sheltered/cross-off" : ws > 0.3 ? "cross-shore" : "onshore";
   parts.push({ tag: "wind", text: `${card(c.wdir)} ${Math.round(c.wspd * 1.151)} mph — ${windWord}`, pts: windPts, max: W.wind });
 
+  // swell direction: full marks in the locals' best direction (bestSwell), part marks elsewhere in the window
   const dirOk = inArc(dom.d, S.swellDir[0], S.swellDir[1]);
-  const dirPts = dirOk ? W.dir : W.dir * 0.3;
-  parts.push({ tag: "direction", text: `${card(dom.d)} swell ${dirOk ? "in" : "outside"} the spot's window`, pts: dirPts, max: W.dir });
+  const dirBest = S.bestSwell ? inArc(dom.d, S.bestSwell[0], S.bestSwell[1]) : dirOk;
+  const dirPts = W.dir * (dirBest ? 1 : dirOk ? 0.6 : 0.2);
+  parts.push({ tag: "direction", text: `${card(dom.d)} swell — ${dirBest ? (S.bestSwell ? "the locals' best direction here" : "in the spot's window") : dirOk ? "works, but not the best direction here" : "outside the spot's window"}`, pts: dirPts, max: W.dir });
 
   const t = c.tide, tf = tideFit(t, c.date, "surf", S.tide);
   const tidePts = W.tide * tf.k;
