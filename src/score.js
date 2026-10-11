@@ -111,6 +111,7 @@ function ruleMatches(w, c, sideIdx, rule) {
   if (w.windDir && !inArc(c.wdir, w.windDir[0], w.windDir[1])) return false;
   if (w.windMax != null && c.wspd > w.windMax) return false;
   if (w.sstMin != null && !(c.sst >= w.sstMin)) return false;
+  if (w.months && !w.months.includes(+c.time.slice(5, 7))) return false;
   if (w.tide) {
     const t = c.tide; if (!t) return false;
     if (w.tide === "rising" && !t.rising) return false;

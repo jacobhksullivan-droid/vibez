@@ -125,3 +125,10 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
 
 ## 17. Hosting moved to Vercel (9 Oct 2026)
 - Netlify blocked deploys (free credits used up). Jacob pushed the project to GitHub (public repo jacobhksullivan-droid/vibez) and connected Vercel → https://jacob-camping-trip.vercel.app. Built folder deploy/epic-camper is committed; vercel.json points Vercel at it; api/live.mjs serves /api/live. passcode.txt is git-ignored and was scrubbed from docs.
+
+## 18. Session 3 (11 Oct 2026) — research round 4 + UI
+- Plan tab now = one auto 5-day plan for Jacob + Seb (21–25 Oct, + dawn session 26th), DP over camps, spear +0.6 bias (`src/plan.js`).
+- UI: liquid-glass dark-ocean theme, floating bottom icon tab bar (Home/Map/Plan/List), system font; BOM warnings collapsed; header one line. Ask-Claude tab tried and removed.
+- Scoring: `surf.bestSwell` (locals' best swell direction, full marks; rest of window 0.6), surf dir weight 1.3; rule conditions `sstMin` and `months`.
+- Research round 4 (notes: `research/round4_notes.md`): +9 spear, +3 surf → 32 surf + 36 spear. Facebook groups readable via Jacob's Chrome (Spearfishing the Illawarra 351452488781913, Mid North Coast Diving Spearing & Fishing `midcoastdivenspear`, Nearshore conditions 656334855332716, Beginners Sydney Spearfishing).
+- Camp `near` lists extended with OSRM for new spots (scratch script; same method as the original build).
