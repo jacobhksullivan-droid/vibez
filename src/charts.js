@@ -78,8 +78,10 @@ export function surfTable(spot, fc, day, side, scoreAt, colourOf) {
     const now = fc.time[i].slice(0, 13) <= nowH && nowH < (fc.time[i + 3] || "").slice(0, 13);
     rows += `<div class="st-row${now ? " now" : ""}"><span class="st-t">${label(h)}<span class="st-bar" aria-label="${sc ? (sc.no ? "unsafe" : sc.score.toFixed(1) + " out of 10") : "no data"}">${bar}</span></span>`
       + `<span class="st-surf">${range(at)}</span>`
-      + `<span class="st-sw"><b>${swFt.toFixed(1)}<small>ft</small></b><b>${Math.round(dom.T)}<small>s</small></b>`
-      + `<span class="st-dir"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(dom.d + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--ink)"/></g></svg><small>${Math.round(dom.d)}°</small></span></span>`
+      + (dom.h > 0 && dom.T > 0
+        ? `<span class="st-sw"><b>${swFt.toFixed(1)}<small>ft</small></b><b>${Math.round(dom.T)}<small>s</small></b>`
+          + `<span class="st-dir"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(dom.d + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--ink)"/></g></svg><small>${Math.round(dom.d)}°</small></span></span>`
+        : `<span class="st-sw"><b>–</b><b></b><span class="st-dir"><small>no data</small></span></span>`)
       + `<span class="st-wind" style="--wc:${wc}" aria-label="Wind ${card(c.wdir)} ${mph(c.wspd)} mph, ${wrel}"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(c.wdir + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--wc)"/></g></svg><b>${mph(c.wspd)}<small>mph</small></b><small class="wd">${card(c.wdir)}</small></span></div>`;
   }
   if (!rows) return "";

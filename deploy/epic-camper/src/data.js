@@ -16,12 +16,12 @@ const DAYS = 10;
 
 const MF_VARS = "wave_height,swell_wave_height,swell_wave_direction,swell_wave_period,secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl";
 const WAVE_MODELS = ["ecmwf_wam025", "ncep_gfswave025"];
-const WAVE_VARS = "wave_height,swell_wave_height,swell_wave_direction,swell_wave_period";
+const WAVE_VARS = "wave_height,wave_period,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period";
 const WX_MODELS = { ecmwf_ifs025: 1.2, ukmo_global_deterministic_10km: 1.3, icon_seamless: 1, gfs_seamless: 0.8, gem_seamless: 0.8 };
 const WX_VARS = "wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation";
 
 // changes whenever a spot is added, removed or moved, so the cached forecast is refetched
-const signature = () => SPOTS.map(s => `${s.id}@${s.lat.toFixed(4)},${s.lon.toFixed(4)}`).join("|") + "|v3";
+const signature = () => SPOTS.map(s => `${s.id}@${s.lat.toFixed(4)},${s.lon.toFixed(4)}`).join("|") + "|v5";
 
 async function getJSON(url) {
   const r = await fetch(url);
@@ -122,7 +122,7 @@ async function fetchAll() {
   // wave blend for one location (spot or buoy)
   function waveBlend(k) {
     const m = M[k].hourly, v = V[k]?.hourly || {}, n = m.time.length;
-    const out = { hs: [], k: [], T: [], d: [], spread: [] };
+    const out = { hs: [], k: [], T: [], d: [], spread: [], fbH: [], fbT: [], fbD: [] };
     for (let i = 0; i < n; i++) {
       const cand = [["mf", m.wave_height[i]], ...WAVE_MODELS.map(md => [md, v[`wave_height_${md}`]?.[i]])].filter(([, x]) => x != null && x > 0);
       const hsAll = cand.map(c => c[1]);
@@ -141,6 +141,15 @@ async function fetchAll() {
       const mT = m.swell_wave_period[i], mD = m.swell_wave_direction[i];
       out.T.push(mT != null && gT != null ? rnd((mT + gT) / 2, 1) : rnd(mT ?? gT, 1));
       out.d.push(mD != null && gD != null ? dirMean([[mD, 0.6], [gD, 0.4]]) : mD ?? gD ?? null);
+      // past the end of MFWAM's run (its last forecast day stops part-way) fall back to GFS-Wave's swell,
+      // else the total sea (height from the blend, ECMWF's — or GFS's — mean period/direction)
+      if (mH == null) {
+        const eT = v[`wave_period_${WAVE_MODELS[0]}`]?.[i] ?? v[`wave_period_${WAVE_MODELS[1]}`]?.[i], eD = v[`wave_direction_${WAVE_MODELS[0]}`]?.[i] ?? v[`wave_direction_${WAVE_MODELS[1]}`]?.[i];
+        if (gOk && gH >= 0.4 * (hs || 0)) { out.fbH.push(rnd(gH, 2)); out.fbT.push(rnd(gT, 1)); out.fbD.push(gD); } // GFS swell is the main train
+        // otherwise mostly wind sea: use the total sea
+        else if (hs != null && eT > 3) { out.fbH.push(rnd(hs, 2)); out.fbT.push(rnd(eT * 1.15, 1)); out.fbD.push(eD ?? null); }
+        else { out.fbH.push(null); out.fbT.push(null); out.fbD.push(null); }
+      } else { out.fbH.push(null); out.fbT.push(null); out.fbD.push(null); }
     }
     return out;
   }
@@ -174,7 +183,9 @@ async function fetchAll() {
       tz: tzString(M[k].utc_offset_seconds),
       time: m.time,
       hs: wb.hs,
-      p1h: m.swell_wave_height.map((_, i) => scale(m.swell_wave_height, i)), p1d: m.swell_wave_direction.map((d, i) => wb.d[i] ?? d), p1T: m.swell_wave_period.map((T, i) => wb.T[i] ?? rnd(T, 1)),
+      p1h: m.swell_wave_height.map((_, i) => scale(m.swell_wave_height, i) ?? wb.fbH[i]),
+      p1d: m.swell_wave_direction.map((d, i) => (m.swell_wave_height[i] == null ? wb.fbD[i] : wb.d[i] ?? d)),
+      p1T: m.swell_wave_period.map((T, i) => (m.swell_wave_height[i] == null ? wb.fbT[i] : wb.T[i] ?? rnd(T, 1))),
       p2h: m.secondary_swell_wave_height.map((_, i) => scale(m.secondary_swell_wave_height, i)), p2d: m.secondary_swell_wave_direction, p2T: round(m.secondary_swell_wave_period, 1),
       wwh: m.wind_wave_height.map((_, i) => scale(m.wind_wave_height, i)), wwd: m.wind_wave_direction, wwT: round(m.wind_wave_period, 1),
       sst: round(m.sea_surface_temperature, 1), cur: round(m.ocean_current_velocity, 1), curDir: m.ocean_current_direction,
