@@ -4,13 +4,14 @@ import { fmtTime, hourCtx, angDiff, card, tideFor, tideEventsFor } from "./score
 const W = 320;
 const hourLabel = h => (h === 12 ? "12pm" : h < 12 ? h + "am" : h - 12 + "pm");
 
-export function windRel(facing, dir, spd) {
-  const off = angDiff(dir, facing + 180); // 0 = blowing straight off the land
-  const rel = off <= 45 ? "offshore" : off <= 70 ? "cross-offshore" : off <= 110 ? "cross-shore" : off <= 135 ? "cross-onshore" : "onshore";
-  return spd < 5 ? `light (${rel})` : rel;
-}
 export const mph = kn => Math.round(kn * 1.151);
-const relColour = rel => (/offshore/.test(rel) && !/cross/.test(rel) ? "var(--s9)" : /cross-off/.test(rel) ? "var(--s7)" : /cross-shore/.test(rel) ? "var(--s5)" : "var(--s1)");
+// plain-English wind for the spot table: one coloured word (light wind = glassy, whatever the direction)
+export function windKind(facing, dir, spd) {
+  if (spd < 5) return { label: "Glassy", c: "var(--s9)" };
+  const off = angDiff(dir, facing + 180);
+  return off <= 45 ? { label: "Offshore", c: "var(--s9)" } : off <= 70 ? { label: "Cross-off", c: "var(--s7)" }
+    : off <= 110 ? { label: "Cross-shore", c: "var(--s5)" } : off <= 135 ? { label: "Cross-on", c: "var(--s3)" } : { label: "Onshore", c: "var(--s1)" };
+}
 
 function frame(win, t0, x, top, bottom) {
   let s = "";
@@ -69,13 +70,13 @@ export function surfTable(spot, fc, day, side, scoreAt, colourOf) {
     const lit = !sc ? 0 : sc.no ? 1 : sc.score < 2 ? 1 : sc.score < 4 ? 2 : sc.score < 6 ? 3 : sc.score < 8 ? 4 : 5; // 5 levels, same bands as the badges
     const col = sc ? colourOf(sc.score, sc.no) : "var(--line)";
     const bar = [1, 2, 3, 4, 5].map(k => `<i style="background:${k <= lit ? col : "var(--line)"}"></i>`).join("");
-    const wrel = windRel(facing, c.wdir, c.wspd), wc = relColour(wrel);
+    const wk = windKind(facing, c.wdir, c.wspd);
     const now = fc.time[i].slice(0, 13) <= nowH && nowH < (fc.time[i + 3] || "").slice(0, 13);
     rows += `<div class="st-row${now ? " now" : ""}"><span class="st-t">${label(h)}<span class="st-bar" aria-label="${sc ? (sc.no ? "unsafe" : sc.score.toFixed(1) + " out of 10") : "no data"}">${bar}</span></span>`
-      + `<span class="st-wind" style="--wc:${wc}" aria-label="Wind ${card(c.wdir)} ${mph(c.wspd)} mph, ${wrel}"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(c.wdir + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--wc)"/></g></svg><b>${mph(c.wspd)}<small>mph</small></b><small class="wd">${card(c.wdir)}</small></span></div>`;
+      + `<span class="st-wk" style="--wc:${wk.c}">${wk.label}</span><span class="st-mph"><b>${mph(c.wspd)}</b> mph</span><span class="st-dir2">${card(c.wdir)}</span></div>`;
   }
   if (!rows) return "";
-  return `<div class="st windonly"><div class="st-head"><span></span><span>Wind</span></div>${rows}</div>`;
+  return `<div class="st windonly"><div class="st-head"><span></span><span>Wind</span><span></span><span></span></div>${rows}</div>`;
 }
 
 // Touch-and-drag (or hover) along the tide chart to read the time and height at that point.

@@ -4,7 +4,7 @@ import { loadForecast, forecastDays } from "./data.js";
 import { scoreSpotDay, scoreHourAt, bestTime, setSharks, sharksNear, WINDOWS, fmtTime, card, ft } from "./score.js";
 import { correct, zoneOf } from "./correct.js";
 import { loadLive, cachedLive, bomText } from "./live.js";
-import { tideGraph, bindTideScrub, windRel, surfTable, mph } from "./charts.js";
+import { tideGraph, bindTideScrub, surfTable, mph } from "./charts.js";
 import { savedOrigin, saveOrigin, driveTimes, fmtDrive } from "./location.js";
 import { loadBuoys, cachedBuoys } from "./buoys.js";
 import { renderHome } from "./home.js";
@@ -376,13 +376,13 @@ function openSheet(id, winLabel) {
     ${PARTNER[id].map(o => `<button class="partner" type="button" data-open="${o.id}">${TYPE_ICON[o.type]} ${o.type === "surf" ? "Surf" : "Spear"} here too: <b>${esc(o.name)}</b> <span class="badge" style="--c:${colour(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}">${fmtScore(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}</span> ›</button>`).join("")}
     ${legal ? `<p class="warn">No spearing: inside ${esc(legal)}</p>` : ""}
     ${win.no ? `<p class="no">${esc(win.no)}</p>` : ""}
+    <section class="infocard"><h3>Spot info</h3>${info}${rules || intel ? `<details class="more"><summary>Local knowledge</summary>${rules ? `<p class="sub">Local rules</p><ul>${rules}</ul>` : ""}${intel ? `<p class="sub">Local intel</p><ul>${intel}</ul>` : ""}</details>` : ""}</section>
     ${best}${sharks}
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
     ${table}
     <div class="tidebox"><small>Tide</small>${tideGraph(s, fcs, state.day, win)}</div>
     ${rainStrip(fcs, state.day)}
-    <div class="gorow"><a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>${s.surfline ? `<a class="go sl" href="${s.surfline.url}" target="_blank" rel="noopener">Surfline<small>${esc(s.surfline.name)}</small></a>` : ""}</div>
-    <details class="more"><summary>Spot info</summary>${info}${rules ? `<p class="sub">Local rules</p><ul>${rules}</ul>` : ""}${intel ? `<p class="sub">Local intel</p><ul>${intel}</ul>` : ""}</details>
+    <div class="gorow"><a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>${s.surfline ? `<a class="go sl" href="${s.surfline.url}#sl_universal_link" target="_blank" rel="noopener">Surfline<small>${esc(s.surfline.name)}</small></a>` : ""}</div>
     ${bom}${camps}
     <details class="more"><summary>Why ${fmtScore(win.score, win.no)}?</summary><div class="parts">${parts}</div></details>
     ${checked}`;
