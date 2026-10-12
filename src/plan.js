@@ -198,11 +198,11 @@ export function makePlan(dayResults) {
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
     notes: [`Leave by ${leave} — van back in Bankstown at 2pm (~${Math.round(backMin / 6) / 10} h).`] });
-  return { days, covered, skipped, why: explain(days, route.map(i => camps[i]), resFor, sideOf, covered, skipped) };
+  return { days, covered, skipped, why: explain(days, route.map(i => camps[i]), resFor, sideOf, skipped) };
 }
 
-// Plain-English "why this plan": direction, why it starts where it does, the standout sessions, and the ground rules.
-function explain(days, stops, resFor, sideOf, covered, skipped) {
+// Plain-English "why this plan": direction, why it starts where it does, and the standout sessions.
+function explain(days, stops, resFor, sideOf, skipped) {
   const why = [];
   const dshort = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric" });
   const sess = days.flatMap(e => e.sessions.map(x => ({ ...x, day: e.day })));
@@ -234,8 +234,6 @@ function explain(days, stops, resFor, sideOf, covered, skipped) {
   const best = sess.filter(x => x.forecast && !x.no).sort((x, y) => y.score - x.score).slice(0, 3);
   if (best.length) why.push(`Standout sessions: ${best.map(x => `${dshort(x.day)} ${SPOT[x.id].name.split(/[(—,]/)[0].trim()} ${x.type === "surf" ? "surf" : "dive"} ${Math.round(x.score)}/10`).join(" · ")}.`);
   if (skipped) why.push(`Skips the ${skipped} coast — its forecast is terrible for the whole trip.`);
-  why.push(`Every day: one surf + one dive · 1–2 nights a stop · never back to a place · night 1 on a powered site.`);
-  why.push(covered >= NIGHTS.length ? "Fully on the forecast — re-plans every time it updates." : `Forecast covers ${covered} of ${NIGHTS.length + 1} days; the rest use each spot's usual quality and update as the forecast arrives.`);
   return why;
 }
 
