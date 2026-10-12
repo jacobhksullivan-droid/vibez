@@ -85,7 +85,7 @@ export function surfTable(spot, fc, day, side, scoreAt, colourOf) {
       + `<span class="st-wind" style="--wc:${wc}" aria-label="Wind ${card(c.wdir)} ${mph(c.wspd)} mph, ${wrel}"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(c.wdir + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--wc)"/></g></svg><b>${mph(c.wspd)}<small>mph</small></b><small class="wd">${card(c.wdir)}</small></span></div>`;
   }
   if (!rows) return "";
-  return `<div class="st"><div class="st-head"><span></span><span>${isSurf ? "Surf (ft)" : "At entry (ft)"}</span><span>Primary swell</span><span>Wind</span></div>${rows}</div>`;
+  return `<div class="st"><div class="st-head"><span></span><span>${isSurf ? "Surf (ft)" : "Swell at entry (ft)"}</span><span>Primary swell</span><span>Wind</span></div>${rows}</div>`;
 }
 
 // Touch-and-drag (or hover) along the tide chart to read the time and height at that point.
