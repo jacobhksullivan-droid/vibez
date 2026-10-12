@@ -2,7 +2,7 @@
 //  21–25: Jacob + Seb — best surf + spearing (counted equally). Night 1 is always a powered site (charge the van).
 //  26–30: the other two join (meet them wherever suits) — same goal: the best surf + spearing for Jacob + Seb.
 //  31: morning session, back at Bankstown by 2pm.
-// Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per place (camps within 5 km; a 3rd only if
+// One sweep up or down the coast — never doubling back. Both coasts (2+ nights each) unless one is terrible for the whole forecast. 1–2 nights per place (camps within 5 km; a 3rd only if
 // the forecast there is insane, a 9+ session) and never back to a place once you've left it, nor to a spot already done.
 // Every night's camp is picked together (beam search over routes) so the sessions around it score as high
 // as possible, minus the cost of driving. Every day = one surf + one dive: morning near last night's camp → drive → arvo near tonight's.
@@ -21,7 +21,7 @@ export const driveMin = (a, b) => { const d = km(a, b); return Math.round((d < 4
 const SPEAR_BONUS = 0;     // surf and spearing count equally (Jacob, 11 Oct)
 const DRIVE_COST = 0.7;    // points per hour of driving between camps
 const MAX_MOVE = 240;                             // minutes of driving between camps
-const FIRST_MAX = 240, LAST_MAX = 150; // Bankstown → night 1; night 30 → Bankstown
+const FIRST_MAX = 240, LAST_MAX = 300; // Bankstown → night 1; night 30 → Bankstown (5 h still allows a dawn session before the 2pm drop-off)
 const KBONUS = { free: 0.5, rest: 0.5, npws: 0.3, camp: 0.3, park: 0 };
 const MORNING = ["Dawn", "Morning"], ARVO = ["Midday", "Arvo", "Evening"];
 
@@ -110,13 +110,18 @@ export function makePlan(dayResults) {
   const AREA_KM = 5, BEAM = 400, PER_CAMP = 3; // "same place" = camps within 5 km (e.g. two Seal Rocks camps)
   const near = camps.map(a => camps.map(b => km(a, b) < AREA_KM));
   const side = camps.map(sideOf);
+  // spots within 3 km are the same place (Maloneys + the Gravel Loader are both Bass Point): doing one uses up the other
+  const NB = Object.fromEntries(SPOTS.map(a => [a.id, SPOTS.filter(b => km(a, b) < 3).map(b => b.id)]));
+  const expand = ids => ids.flatMap(id => NB[id] || [id]);
+  // one sweep up or down the coast: once the route has moved north (or south) it never heads back the other way
+  const TOL = 0.08; // ° latitude (~9 km) of wiggle allowed
   let beam = [];
   camps.forEach((c, i) => {
     if (home[i] > FIRST_MAX || !powered(c)) return;
     const nN = side[i] === "N" ? 1 : 0, nS = side[i] === "S" ? 1 : 0;
     if (short(nN, nS) > K - 1) return;
     const nv = nightVal(0, i, new Set(), new Set());
-    beam.push({ r: [i], v: nv.v - DRIVE_COST * home[i] / 60, nN, nS, used: new Set(), cur: new Set(nv.ids), anchor: i, streak: 1, past: [] });
+    beam.push({ r: [i], v: nv.v - DRIVE_COST * home[i] / 60, nN, nS, used: new Set(), cur: new Set(expand(nv.ids)), anchor: i, streak: 1, past: [], dir: 0 });
   });
   for (let k = 1; k < K; k++) {
     const next = [];
@@ -130,25 +135,34 @@ export function makePlan(dayResults) {
         const stay = near[p.anchor][j];
         if (stay && p.streak >= 2 && !insane[k][j]) continue;
         if (!stay && p.past.some(a => near[a][j])) continue;
+        let dir = p.dir;
+        if (!stay) {
+          const dLat = camps[j].lat - camps[p.anchor].lat;
+          if (dir && dLat * dir < -TOL) continue; // no doubling back
+          if (!dir && Math.abs(dLat) > TOL) dir = Math.sign(dLat);
+        }
         const nN = p.nN + (side[j] === "N" ? 1 : 0), nS = p.nS + (side[j] === "S" ? 1 : 0);
         if (short(nN, nS) > K - 1 - k) continue; // can't fit both coasts in any more
+        // heading one way, the other coast is only reachable if it's still ahead of us
+        if (dir < 0 && nN < need.N && side[j] !== "N") continue;
+        if (dir > 0 && nS < need.S && side[j] !== "S") continue;
         // spots done at earlier stops are off the list; staying put you can redo this stop's spots
         const X = stay ? p.used : new Set([...p.used, ...p.cur]);
         const nv = nightVal(k, j, X, stay ? p.cur : new Set());
-        next.push({ p, j, nN, nS, stay, X, ids: nv.ids, v: p.v - DRIVE_COST * drive / 60 + nv.v });
+        next.push({ p, j, nN, nS, stay, X, dir, ids: expand(nv.ids), v: p.v - DRIVE_COST * drive / 60 + nv.v });
       }
     }
     next.sort((a, b) => b.v - a.v);
     const per = new Map(); beam = [];
     for (const x of next) {
-      const key = `${x.j}|${Math.min(x.nN, 2)}|${Math.min(x.nS, 2)}`;
+      const key = `${x.j}|${Math.min(x.nN, 2)}|${Math.min(x.nS, 2)}|${x.dir}`;
       const c = per.get(key) || 0; if (c >= PER_CAMP) continue;
       per.set(key, c + 1);
       beam.push({ r: [...x.p.r, x.j], v: x.v, nN: x.nN, nS: x.nS, used: x.X, cur: x.stay ? new Set([...x.p.cur, ...x.ids]) : new Set(x.ids),
-        anchor: x.stay ? x.p.anchor : x.j, streak: x.stay ? x.p.streak + 1 : 1, past: x.stay ? x.p.past : [...x.p.past, x.p.anchor] });
+        anchor: x.stay ? x.p.anchor : x.j, streak: x.stay ? x.p.streak + 1 : 1, past: x.stay ? x.p.past : [...x.p.past, x.p.anchor], dir: x.dir });
       if (beam.length >= BEAM) break;
     }
-    if (!beam.length) return { days: [], covered: 0 };
+    if (!beam.length) return { days: [], covered: 0, failedAt: k };
   }
   const route = beam[0].r;
   const skipped = !need.N ? "north" : !need.S ? "south" : null;
@@ -163,7 +177,7 @@ export function makePlan(dayResults) {
   const fresh = (list, k) => list.filter(x => !usedAt.has(x.id) || usedAt.get(x.id) === stopOf[k])
     .map(x => (usedAt.has(x.id) ? { ...x, v: x.v - 2.5 * (timesUsed.get(x.id) || 1) } : x)).sort((a, b) => b.v - a.v);
   const timesUsed = new Map();
-  const use = (x, k) => { if (x) { if (!usedAt.has(x.id)) usedAt.set(x.id, stopOf[k]); timesUsed.set(x.id, (timesUsed.get(x.id) || 0) + 1); } return x; };
+  const use = (x, k) => { if (x) { for (const id of NB[x.id] || [x.id]) if (!usedAt.has(id)) usedAt.set(id, stopOf[k]); timesUsed.set(x.id, (timesUsed.get(x.id) || 0) + 1); } return x; };
   NIGHTS.forEach((d, k) => {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
