@@ -198,7 +198,45 @@ export function makePlan(dayResults) {
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
     notes: [`Leave by ${leave} — van back in Bankstown at 2pm (~${Math.round(backMin / 6) / 10} h).`] });
-  return { days, covered, skipped };
+  return { days, covered, skipped, why: explain(days, route.map(i => camps[i]), resFor, sideOf, covered, skipped) };
+}
+
+// Plain-English "why this plan": direction, why it starts where it does, the standout sessions, and the ground rules.
+function explain(days, stops, resFor, sideOf, covered, skipped) {
+  const why = [];
+  const dshort = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric" });
+  const sess = days.flatMap(e => e.sessions.map(x => ({ ...x, day: e.day })));
+  const first = sess[0] && SPOT[sess[0].id], last = sess[sess.length - 1] && SPOT[sess[sess.length - 1].id];
+  const startSide = sideOf(stops[0]) === "N" ? "north" : "south", otherSide = startSide === "north" ? "south" : "north";
+  const heading = stops[stops.length - 1].lat > stops[0].lat ? "north" : "south";
+  if (first && last) why.push(`Starts around ${first.name.split(/[(—,]/)[0].trim()} (${first.region}) and works ${heading} to ${last.name.split(/[(—,]/)[0].trim()} — one sweep, no doubling back.`);
+  // why start there: the forecast for the first 3 days, side by side (spot ratings + recent rain)
+  const early = NIGHTS.slice(0, 3).filter(d => resFor[d]);
+  if (early.length) {
+    const stat = side => {
+      let sc = [], rain = [];
+      for (const d of early) {
+        const res = resFor[d], top = SPOTS.filter(sp => sideOf(sp) === side[0].toUpperCase() && res[sp.id] && !res[sp.id].best?.no)
+          .map(sp => res[sp.id]).sort((a, b) => b.best.score - a.best.score).slice(0, 6);
+        top.forEach(r => { sc.push(r.best.score); if (r.best.rep?.ctx?.rain72 != null) rain.push(r.best.rep.ctx.rain72); });
+      }
+      const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+      return { sc: avg(sc), rain: avg(rain) };
+    };
+    const a = stat(startSide), b = stat(otherSide);
+    const span = early.length > 1 ? `${dshort(early[0])}–${dshort(early[early.length - 1])}` : dshort(early[0]);
+    const r = [];
+    if (a.sc != null && b.sc != null && a.sc > b.sc + 0.2) r.push(`its best spots rate ${a.sc.toFixed(1)}/10 vs ${b.sc.toFixed(1)} ${otherSide} for ${span}`);
+    if (a.rain != null && b.rain != null && a.rain < b.rain - 3) r.push(`it's drier — ~${Math.round(a.rain)} mm of rain in the 3 days before vs ~${Math.round(b.rain)} mm ${otherSide}`);
+    if (r.length) why.push(`Why ${startSide} first: ${r.join(", and ")}.`);
+    else why.push(`Why ${startSide} first: the two coasts are close for ${span}, so it takes the order that makes the best whole trip (less driving, the better spots on the days they're best).`);
+  } else why.push(`The forecast doesn't reach ${dshort(NIGHTS[0])} yet, so the order comes from each spot's usual quality — it'll re-plan from real wind, swell and rain as the forecast arrives.`);
+  const best = sess.filter(x => x.forecast && !x.no).sort((x, y) => y.score - x.score).slice(0, 3);
+  if (best.length) why.push(`Standout sessions: ${best.map(x => `${dshort(x.day)} ${SPOT[x.id].name.split(/[(—,]/)[0].trim()} ${x.type === "surf" ? "surf" : "dive"} ${Math.round(x.score)}/10`).join(" · ")}.`);
+  if (skipped) why.push(`Skips the ${skipped} coast — its forecast is terrible for the whole trip.`);
+  why.push(`Every day: one surf + one dive · 1–2 nights a stop · never back to a place · night 1 on a powered site.`);
+  why.push(covered >= NIGHTS.length ? "Fully on the forecast — re-plans every time it updates." : `Forecast covers ${covered} of ${NIGHTS.length + 1} days; the rest use each spot's usual quality and update as the forecast arrives.`);
+  return why;
 }
 
 export { KIND };

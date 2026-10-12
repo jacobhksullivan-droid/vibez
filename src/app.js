@@ -307,9 +307,8 @@ function renderPlan() {
       ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
     </article>`;
   }).join("");
-  $("#plan").innerHTML = `<section class="hsec"><h2>You + Seb · 21–25 Oct</h2>
-    <small class="hint">Updates itself with every forecast. Does north and south unless one side is terrible the whole time. Days the forecast doesn't reach yet use each spot's base quality.</small>
-    ${P.skipped ? `<p class="pnote">Skipping the ${P.skipped} coast — the forecast there is terrible for the whole trip.</p>` : ""}</section>${days}`;
+  $("#plan").innerHTML = `<section class="hsec"><h2>Why this plan</h2>
+    <div class="hcard whycard"><ul>${(P.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul></div></section>${days}`;
 }
 
 // ---------- spot sheet ----------
