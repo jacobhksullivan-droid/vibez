@@ -381,7 +381,7 @@ function openSheet(id, winLabel) {
     ${table}
     <div class="tidebox"><small>Tide</small>${tideGraph(s, fcs, state.day, win)}</div>
     ${rainStrip(fcs, state.day)}
-    <a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>
+    <div class="gorow"><a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>${s.surfline ? `<a class="go sl" href="${s.surfline.url}" target="_blank" rel="noopener">Surfline<small>${esc(s.surfline.name)}</small></a>` : ""}</div>
     <details class="more"><summary>Spot info</summary>${info}${rules ? `<p class="sub">Local rules</p><ul>${rules}</ul>` : ""}${intel ? `<p class="sub">Local intel</p><ul>${intel}</ul>` : ""}</details>
     ${bom}${camps}
     <details class="more"><summary>Why ${fmtScore(win.score, win.no)}?</summary><div class="parts">${parts}</div></details>

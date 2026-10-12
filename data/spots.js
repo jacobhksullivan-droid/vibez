@@ -20,6 +20,7 @@
 //        then: { spear:+2, surf:-1, spearCap:3, surfCap:3 },
 //        why: "plain-English reason shown in the app", src: "link or note" }
 //    swellMin/Max are offshore significant wave height in metres. sstMin = water temp °C.
+//  * surfline = the nearest Surfline report (opened from the spot page).
 //  * surf.quality = how good the wave is (Wannasurf rating: world class +0.8, regional classic +0.4, normal 0, sloppy −0.6),
 //    added straight onto the 0–10 score. size = [ideal ft range: 2–5 ft], maxSize = biggest we'd surf (Jacob + Seb: confident to ~6 ft).
 //  * surf.bestSwell = the locals' best swell direction inside swellDir (full direction points; the rest of swellDir gets part).
@@ -45,6 +46,7 @@ export const SPOTS = [
   // ---------------- FAR SOUTH / SOUTH COAST ----------------
   {
     id: "pambula-beach", type: "surf", name: "Pambula Beach", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/pambula-beach/640b94759b6fab087d2e79ce", name: "Pambula Beach" },
     region: "Far South Coast", lat: -36.9360, lon: 149.9200, tide: "A",
     access: { lat: -36.9391, lon: 149.9085, note: "Pambula Beach SLSC car park (past the Big4 holiday park)." },
     overnight: "Pambula Beach / Merimbula holiday parks.",
@@ -62,6 +64,7 @@ export const SPOTS = [
   },
   {
     id: "camel-rock", type: "surf", name: "Camel Rock (Bermagui)",
+    surfline: { url: "https://www.surfline.com/surf-report/camel-rock/584204204e65fad6a7709454", name: "Camel Rock" },
     region: "Far South Coast", lat: -36.3760, lon: 150.0830, tide: "A",
     access: { lat: -36.3786, lon: 150.0790, note: "Camel Rock top car park off Wallaga Lake Rd (drive past the first car park)." },
     overnight: "Caravan parks at Bermagui and Wallaga Lake.",
@@ -77,6 +80,7 @@ export const SPOTS = [
   },
   {
     id: "potato-point", type: "surf", name: "Potato Point (north side)",
+    surfline: { url: "https://www.surfline.com/surf-report/potato-point/584204204e65fad6a770944e", name: "Potato Point" },
     region: "South Coast", lat: -36.0925, lon: 150.1385, tide: "A",
     access: { lat: -36.0935, lon: 150.1340, note: "Potato Point village, walk to the headland." },
     overnight: "Potato Point / Tuross Head holiday parks; Eurobodalla NP campgrounds.",
@@ -95,6 +99,7 @@ export const SPOTS = [
   },
   {
     id: "mckenzies", type: "surf", name: "McKenzies Beach (Malua Bay)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/malua/584204204e65fad6a7709446", name: "Malua" },
     region: "South Coast", lat: -35.8044, lon: 150.2295, tide: "A",
     access: { lat: -35.8040, lon: 150.2270, note: "George Bass Drive just past Malua Bay — very little parking in summer." },
     overnight: "Batemans Bay holiday parks; Murramarang NP campgrounds north.",
@@ -112,6 +117,7 @@ export const SPOTS = [
   },
   {
     id: "durras-south", type: "surf", name: "South Durras", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/durras-beach/584204204e65fad6a7709444", name: "Durras Beach" },
     region: "South Coast", lat: -35.6495, lon: 150.3005, tide: "A",
     access: { lat: -35.6520, lon: 150.2960, note: "South Durras village beach access." },
     overnight: "Durras holiday parks; Murramarang NP (Depot Beach, Pebbly Beach).",
@@ -129,6 +135,7 @@ export const SPOTS = [
   },
   {
     id: "durras-north", type: "surf", name: "North Durras",
+    surfline: { url: "https://www.surfline.com/surf-report/durras-beach/584204204e65fad6a7709444", name: "Durras Beach" },
     region: "South Coast", lat: -35.6364, lon: 150.3125, tide: "A",
     access: { lat: -35.6266, lon: 150.3116, note: "North Durras — park on the cliff or at the caravan park." },
     overnight: "North Durras caravan park; Murramarang NP campgrounds.",
@@ -146,6 +153,7 @@ export const SPOTS = [
   },
   {
     id: "mollymook", type: "surf", name: "Mollymook (north end, Bannisters)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/mollymook-beach/584204204e65fad6a7709437", name: "Mollymook Beach" },
     region: "South Coast", lat: -35.3300, lon: 150.4800, tide: "A",
     access: { lat: -35.3280, lon: 150.4770, note: "North Mollymook car park and stairs; or Beach Rd roadside." },
     overnight: "Ulladulla Headland Holiday Park; Murramarang NP campgrounds to the south.",
@@ -161,6 +169,7 @@ export const SPOTS = [
   },
   {
     id: "inyadda", type: "surf", name: "Inyadda (Manyana)",
+    surfline: { url: "https://www.surfline.com/surf-report/bendalong-beach/584204204e65fad6a7709433", name: "Bendalong Beach" },
     region: "South Coast", lat: -35.2563, lon: 150.5290, tide: "A",
     access: { lat: -35.2550, lon: 150.5262, note: "Inyadda Beach car park, Manyana." },
     overnight: "Bendalong / Manyana holiday parks.",
@@ -181,6 +190,7 @@ export const SPOTS = [
   // ---------------- SHOALHAVEN / ILLAWARRA ----------------
   {
     id: "culburra", type: "surf", name: "Culburra Beach", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/culburra-beach/640b94c99b6fab02d52e8cf3", name: "Culburra Beach" },
     region: "Shoalhaven/Illawarra", lat: -34.9255, lon: 150.7700, tide: "A",
     access: { lat: -34.9300, lon: 150.7790, note: "Culburra Beach SLSC car park." },
     overnight: "Holiday parks at Culburra Beach and Currarong.",
@@ -198,6 +208,7 @@ export const SPOTS = [
   },
   {
     id: "werri", type: "surf", name: "Werri Beach (Gerringong)",
+    surfline: { url: "https://www.surfline.com/surf-report/werri-beach/5842041f4e65fad6a7708c07", name: "Werri Beach" },
     region: "Shoalhaven/Illawarra", lat: -34.7316, lon: 150.8379, tide: "A",
     access: { lat: -34.7330, lon: 150.8310, note: "Pacific Ave car park near SLSC." },
     overnight: "Werri Beach Holiday Park; Killalea campground (Shell Cove).",
@@ -216,6 +227,7 @@ export const SPOTS = [
   },
   {
     id: "killalea-farm", type: "surf", name: "The Farm (Killalea)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/the-farm/584204204e65fad6a7709421", name: "The Farm" },
     region: "Shoalhaven/Illawarra", lat: -34.6045, lon: 150.8690, tide: "A",
     access: { lat: -34.6060, lon: 150.8620, note: "Killalea Reserve, The Farm car park (gate hours apply)." },
     overnight: "Killalea campground (paid, on site).",
@@ -236,6 +248,7 @@ export const SPOTS = [
   // ---------------- CENTRAL COAST / NEWCASTLE ----------------
   {
     id: "shelly-cc", type: "surf", name: "Shelly Beach (Central Coast)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/shelly-beach/584204204e65fad6a77093b4", name: "Shelly Beach" },
     region: "Central Coast/Newcastle", lat: -33.3710, lon: 151.4935, tide: "A",
     access: { lat: -33.3712, lon: 151.4890, note: "Shelly Beach car parks off Shelly Beach Rd (golf course side)." },
     overnight: "Holiday parks at The Entrance / Toowoon Bay.",
@@ -252,6 +265,7 @@ export const SPOTS = [
   },
   {
     id: "soldiers", type: "surf", name: "Soldiers Beach (Norah Head)",
+    surfline: { url: "https://www.surfline.com/surf-report/soldiers-beach/584204204e65fad6a77093b0", name: "Soldiers Beach" },
     region: "Central Coast/Newcastle", lat: -33.2906, lon: 151.5690, tide: "A",
     access: { lat: -33.2905, lon: 151.5650, note: "Headland car park — check the point and the bay from the driver's seat." },
     overnight: "Norah Head Holiday Park.",
@@ -268,6 +282,7 @@ export const SPOTS = [
   },
   {
     id: "merewether", type: "surf", name: "Merewether Beach (Newcastle)",
+    surfline: { url: "https://www.surfline.com/surf-report/merewether/584204204e65fad6a77093a2", name: "Merewether" },
     region: "Central Coast/Newcastle", lat: -32.9493, lon: 151.7600, tide: "A",
     access: { lat: -32.9480, lon: 151.7560, note: "Merewether Beach car park, Henderson Pde." },
     overnight: "Stockton Beach Holiday Park; Newcastle holiday parks.",
@@ -286,6 +301,7 @@ export const SPOTS = [
   },
   {
     id: "nobbys", type: "surf", name: "Nobbys Beach (Newcastle)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/nobbys-beach/584204204e65fad6a7709393", name: "Nobbys Beach" },
     region: "Central Coast/Newcastle", lat: -32.9235, lon: 151.7970, tide: "A",
     access: { lat: -32.9215, lon: 151.7935, note: "Nobbys Rd car park." },
     overnight: "Stockton Beach Holiday Park (ferry/drive); Newcastle holiday parks.",
@@ -304,6 +320,7 @@ export const SPOTS = [
   },
   {
     id: "one-mile-anna-bay", type: "surf", name: "One Mile Beach (Anna Bay)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/one-mile-beach/584204204e65fad6a7709380", name: "One Mile Beach" },
     region: "Port Stephens/Great Lakes", lat: -32.7745, lon: 152.1255, tide: "A",
     access: { lat: -32.7770, lon: 152.1150, note: "One Mile Close car park (slide down the dune)." },
     overnight: "One Mile Beach Holiday Park (on the beach).",
@@ -320,6 +337,7 @@ export const SPOTS = [
   },
   {
     id: "seal-rocks-no1", type: "surf", name: "Number One Beach, Seal Rocks", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/seal-rocks/640b958ade81d540cf0c77d7", name: "Seal Rocks" },
     region: "Port Stephens/Great Lakes", lat: -32.4356, lon: 152.5300, tide: "A",
     access: { lat: -32.4362, lon: 152.5290, note: "Seal Rocks car park in front of the beach (you see the lines coming down the hill)." },
     overnight: "Seal Rocks Holiday Park; Treachery Camp.",
@@ -339,6 +357,7 @@ export const SPOTS = [
   },
   {
     id: "crescent-head", type: "surf", name: "Crescent Head (the point)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/crescent-head/584204204e65fad6a7709336", name: "Crescent Head" },
     region: "Mid North Coast", lat: -31.1863, lon: 152.9814, tide: "A",
     access: { lat: -31.1900, lon: 152.9745, note: "Pacific St / Point car park beside Killick Creek." },
     overnight: "Crescent Head Holiday Park; Hat Head NP campgrounds (Delicate).",
@@ -358,6 +377,7 @@ export const SPOTS = [
   },
   {
     id: "lake-cathie", type: "surf", name: "Lake Cathie (Middle Rock)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/middle-rock/584204204e65fad6a7709357", name: "Middle Rock" },
     region: "Mid North Coast", lat: -31.5600, lon: 152.8540, tide: "A",
     access: { lat: -31.5612, lon: 152.8494, note: "Park right by the beach on Ocean Dr; Middle Rock at the south end." },
     overnight: "Lake Cathie / Bonny Hills holiday parks.",
@@ -374,6 +394,7 @@ export const SPOTS = [
   },
   {
     id: "diamond-head", type: "surf", name: "Diamond Head (Crowdy Bay NP)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/diamond-head/584204204e65fad6a770935d", name: "Diamond Head" },
     region: "Mid North Coast", lat: -31.7166, lon: 152.7990, tide: "A",
     access: { lat: -31.7175, lon: 152.7930, note: "Diamond Head campground (NPWS, parking ticket if camping)." },
     overnight: "Diamond Head campground (on site, showers/toilets).",
@@ -393,6 +414,7 @@ export const SPOTS = [
   // ---------------- COFFS COAST ----------------
   {
     id: "sawtell", type: "surf", name: "Sawtell (headland)",
+    surfline: { url: "https://www.surfline.com/surf-report/sawtell-main-beach/584204204e65fad6a7709329", name: "Sawtell Main Beach" },
     region: "Coffs Coast", lat: -30.3781, lon: 153.1040, tide: "A",
     access: { lat: -30.3766, lon: 153.1038, note: "Park on the headland or in the car park — check it from the road." },
     overnight: "Sawtell Beach Holiday Park.",
@@ -409,6 +431,7 @@ export const SPOTS = [
   },
   {
     id: "diggers", type: "surf", name: "Diggers Beach (Coffs Harbour)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/diggers-beach/584204204e65fad6a7709320", name: "Diggers Beach" },
     region: "Coffs Coast", lat: -30.2750, lon: 153.1450, tide: "A",
     access: { lat: -30.2735, lon: 153.1415, note: "Diggers Beach Rd car park — lock the car, nothing on show." },
     overnight: "Park Beach Holiday Park; Coffs holiday parks.",
@@ -426,6 +449,7 @@ export const SPOTS = [
   },
   {
     id: "sandy-beach-coffs", type: "surf", name: "Sandy Beach point (N of Coffs)",
+    surfline: { url: "https://www.surfline.com/surf-report/sandy-beach/584204204e65fad6a7709318", name: "Sandy Beach" },
     region: "Coffs Coast", lat: -30.1530, lon: 153.2035, tide: "A",
     access: { lat: -30.1500, lon: 153.1983, note: "Sandy Beach village; walk to the headland end." },
     overnight: "Woolgoolga / Moonee Beach holiday parks.",
@@ -445,6 +469,7 @@ export const SPOTS = [
   // ---------------- Research round 3 (8 Oct 2026): Google/Reddit + Wannasurf ----------------
   {
     id: "cuttagee", type: "surf", name: "Cuttagee Beach (S of Bermagui)",
+    surfline: { url: "https://www.surfline.com/surf-report/cuttagee-beach/640b94149b6fab710d2e63cd", name: "Cuttagee Beach" },
     region: "Far South Coast", lat: -36.4935, lon: 150.0640, tide: "A",
     access: { lat: -36.4960, lon: 150.0580, note: "Tathra–Bermagui Rd, ~12 km south of Bermagui; park right in front of the break." },
     overnight: "Bermagui holiday parks; Murrah/Mimosa Rocks NP camping.",
@@ -460,6 +485,7 @@ export const SPOTS = [
   },
   {
     id: "seven-mile-gerroa", type: "surf", name: "Seven Mile Beach (Gerroa end)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/seven-mile-beach/584204204e65fad6a7709426", name: "Seven Mile Beach" },
     region: "Shoalhaven/Illawarra", lat: -34.7840, lon: 150.8150, tide: "A",
     access: { lat: -34.7790, lon: 150.8110, note: "Gerroa — Seven Mile Beach car parks off Crooked River Rd / the boat ramp area." },
     overnight: "Seven Mile Beach Holiday Park (Gerroa); Gerroa Boat Fishermans park.",
@@ -476,6 +502,7 @@ export const SPOTS = [
   },
   {
     id: "blacksmiths", type: "surf", name: "Blacksmiths Beach (Swansea)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/blacksmiths/584204204e65fad6a77093ad", name: "Blacksmiths" },
     region: "Central Coast/Newcastle", lat: -33.0760, lon: 151.6640, tide: "A",
     access: { lat: -33.0745, lon: 151.6585, note: "Blacksmiths SLSC car park; breakwall end via the Grannys Pool car park." },
     overnight: "Swansea / Belmont holiday parks.",
@@ -494,6 +521,7 @@ export const SPOTS = [
   },
   {
     id: "boomerang", type: "surf", name: "Boomerang Beach (Pacific Palms)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/boomerang-beach/584204204e65fad6a770936f", name: "Boomerang Beach" },
     region: "Port Stephens/Great Lakes", lat: -32.3425, lon: 152.5470, tide: "A",
     access: { lat: -32.3400, lon: 152.5433, note: "Boomerang Beach car parks off Boomerang Dr (25 km south of Forster)." },
     overnight: "Pacific Palms / Elizabeth Beach / Seal Rocks camping.",
@@ -512,6 +540,7 @@ export const SPOTS = [
   },
   {
     id: "scotts-head", type: "surf", name: "Scotts Head (the point)",
+    surfline: { url: "https://www.surfline.com/surf-report/scotts-head/584204204e65fad6a7709330", name: "Scotts Head" },
     region: "Mid North Coast", lat: -30.7420, lon: 153.0080, tide: "A",
     access: { lat: -30.7470, lon: 152.9960, note: "Scotts Head Reserve / holiday park car park by the point." },
     overnight: "Scotts Head Holiday Park (beachfront).",
@@ -531,6 +560,7 @@ export const SPOTS = [
   },
   {
     id: "arrawarra", type: "surf", name: "Arrawarra Point (N of Woolgoolga)", easy: "learn",
+    surfline: { url: "https://www.surfline.com/surf-report/arrawarra/584204204e65fad6a7709313", name: "Arrawarra" },
     region: "Coffs Coast", lat: -30.0570, lon: 153.2045, tide: "A",
     access: { lat: -30.0600, lon: 153.2005, note: "Arrawarra Headland car park (~2.5 km north of Woolgoolga); walk the track and jump off the rocks." },
     overnight: "Arrawarra Beach Holiday Park; Woolgoolga.",
@@ -558,6 +588,7 @@ export const SPOTS = [
   // ---------------- FAR SOUTH COAST ----------------
   {
     id: "merimbula-wharf", type: "spear", name: "Merimbula Wharf",
+    surfline: { url: "https://www.surfline.com/surf-report/merimbula-bar/5842041f4e65fad6a7708c01", name: "Merimbula Bar" },
     region: "Far South Coast", lat: -36.8990, lon: 149.9270, tide: "A",
     access: { lat: -36.8985, lon: 149.9262, note: "End of Lake St at the wharf/aquarium; walk out to the point." },
     overnight: "Merimbula holiday parks.",
@@ -588,6 +619,7 @@ export const SPOTS = [
   },
   {
     id: "haycock-point", type: "spear", name: "Haycock Point (Beowa NP, Pambula)",
+    surfline: { url: "https://www.surfline.com/surf-report/haycock-beach/640b94938284fe080caf9af4", name: "Haycock Beach" },
     region: "Far South Coast", lat: -36.9495, lon: 149.9470, tide: "A",
     access: { lat: -36.9497, lon: 149.9424, note: "Haycock Point picnic area car park (NPWS; park entry fee may apply)." },
     overnight: "Pambula Beach / Merimbula holiday parks; Beowa NP campgrounds further south.",
@@ -615,6 +647,7 @@ export const SPOTS = [
   },
   {
     id: "tathra-headland", type: "spear", name: "Tathra Headland (Wharf / Kianinny Bay)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/tathra-beach/584204204e65fad6a7709455", name: "Tathra Beach" },
     region: "Far South Coast", lat: -36.7248, lon: 149.9897, tide: "A",
     access: { lat: -36.7270, lon: 149.9879, note: "Tathra Wharf car park at the end of Wharf Rd (park on the right). Kianinny Bay boat ramp car park for the south side." },
     overnight: "Tathra Beach holiday park; Mimosa Rocks NP campgrounds north of Tathra.",
@@ -643,6 +676,7 @@ export const SPOTS = [
   },
   {
     id: "bermagui-horseshoe", type: "spear", name: "Bermagui Point (Horseshoe Bay / Blue Pool)",
+    surfline: { url: "https://www.surfline.com/surf-report/beares-beach/5dd6e41dccc44454b69f6e62", name: "Beares Beach" },
     region: "Far South Coast", lat: -36.4221, lon: 150.0823, tide: "A",
     access: { lat: -36.4248, lon: 150.0775, note: "Horseshoe Bay car park / Blue Pool car park, Bermagui." },
     overnight: "Zane Grey caravan park (Bermagui); Wallaga Lake parks.",
@@ -669,6 +703,7 @@ export const SPOTS = [
   },
   {
     id: "narooma-glasshouse", type: "spear", name: "Glasshouse Rocks (Narooma)",
+    surfline: { url: "https://www.surfline.com/surf-report/narooma/584204204e65fad6a7709451", name: "Narooma" },
     region: "Far South Coast", lat: -36.2376, lon: 150.1480, tide: "A",
     access: { lat: -36.2340, lon: 150.1420, note: "Narooma Surf Beach car park; walk south around the rocks at low tide." },
     overnight: "Narooma holiday parks; Mystery Bay campground (south).",
@@ -694,6 +729,7 @@ export const SPOTS = [
   // ---------------- SOUTH COAST ----------------
   {
     id: "crampton-island", type: "spear", name: "Crampton (Tabourie) Island — east side",
+    surfline: { url: "https://www.surfline.com/surf-report/north-tabourie/584204204e65fad6a770943c", name: "North Tabourie" },
     region: "South Coast", lat: -35.4448, lon: 150.4172, tide: "A",
     access: { lat: -35.4425, lon: 150.4085, note: "Lake Tabourie beach access; walk out to the island across the sand around low tide (the crossing changes)." },
     overnight: "Lake Tabourie holiday park; Ulladulla parks 15 min north.",
@@ -720,6 +756,7 @@ export const SPOTS = [
   },
   {
     id: "warden-head", type: "spear", name: "Warden Head (Ulladulla)",
+    surfline: { url: "https://www.surfline.com/surf-report/ulladulla-bommie/5842041f4e65fad6a7708c03", name: "Ulladulla Bommie" },
     region: "South Coast", lat: -35.3665, lon: 150.4925, tide: "A",
     access: { lat: -35.3663, lon: 150.4895, note: "Warden Head lighthouse car park, Deering St." },
     overnight: "Ulladulla Headland Holiday Park; Murramarang NP campgrounds.",
@@ -749,6 +786,7 @@ export const SPOTS = [
   // ---------------- SHOALHAVEN / ILLAWARRA ----------------
   {
     id: "currarong", type: "spear", name: "Currarong / Beecroft Peninsula rocks",
+    surfline: { url: "https://www.surfline.com/surf-report/currarong/584204204e65fad6a770942a", name: "Currarong" },
     region: "Shoalhaven/Illawarra", lat: -35.0104, lon: 150.8254, tide: "A",
     access: { lat: -35.0158, lon: 150.8254, note: "Currarong village; rock platforms east towards Wreck Point and Lobster Bay. Beecroft Weapons Range (Defence) closes parts of the peninsula on some days." },
     overnight: "Currarong holiday park; Honeymoon Bay camping (Beecroft, limited dates).",
@@ -779,6 +817,7 @@ export const SPOTS = [
   },
   {
     id: "penguin-head", type: "spear", name: "Penguin Head (Culburra) — south side",
+    surfline: { url: "https://www.surfline.com/surf-report/penguin-head/584204204e65fad6a770942b", name: "Penguin Head" },
     region: "Shoalhaven/Illawarra", lat: -34.9327, lon: 150.7850, tide: "A",
     access: { lat: -34.9300, lon: 150.7790, note: "Park at Culburra Beach Surf Club and walk out along the flat rock platform to the end of the head." },
     overnight: "Culburra Beach holiday parks; Currarong.",
@@ -804,6 +843,7 @@ export const SPOTS = [
   },
   {
     id: "plantation-point", type: "spear", name: "Plantation Point (Jervis Bay)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/plantation-point/584204204e65fad6a770942d", name: "Plantation Point" },
     region: "Shoalhaven/Illawarra", lat: -35.0705, lon: 150.6965, tide: "A",
     access: { lat: -35.0728, lon: 150.6930, note: "Plantation Point Pde reserve car park, Vincentia." },
     overnight: "Booderee NP Green Patch (paid, book); Jervis Bay holiday parks.",
@@ -830,6 +870,7 @@ export const SPOTS = [
   },
   {
     id: "kiama-blowhole", type: "spear", name: "Kiama Blowhole Point → Harbour",
+    surfline: { url: "https://www.surfline.com/surf-report/kiama-surf-beach/640b94db4878eb0b781c60bc", name: "Kiama Surf Beach" },
     region: "Shoalhaven/Illawarra", lat: -34.6703, lon: 150.8657, tide: "A",
     access: { lat: -34.6712, lon: 150.8625, note: "Blowhole Point car park by the boat ramp/toilet block (cold showers)." },
     overnight: "Kiama Harbour Cabins / Kendalls Beach holiday park; Werri Beach Holiday Park.",
@@ -856,6 +897,7 @@ export const SPOTS = [
   },
   {
     id: "bass-point-gravel-loader", type: "spear", name: "Bass Point — Gravel Loader", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/redsands/584204204e65fad6a770941b", name: "Redsands" },
     region: "Shoalhaven/Illawarra", lat: -34.5920, lon: 150.8856, tide: "A",
     access: { lat: -34.5940, lon: 150.8864, note: "Park at the old boat ramp just past the loader (reserve gate hours apply; if shut, longer walk)." },
     overnight: "Killalea campground (next door, paid).",
@@ -887,6 +929,7 @@ export const SPOTS = [
   // ---------------- CENTRAL COAST / NEWCASTLE ----------------
   {
     id: "terrigal-skillion", type: "spear", name: "Terrigal Haven / Skillion", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/terrigal-haven/62ed88fdbd444a8d51e913b7", name: "Terrigal Haven" },
     region: "Central Coast/Newcastle", lat: -33.4505, lon: 151.4535, tide: "A",
     access: { lat: -33.4475, lon: 151.4500, note: "Terrigal Haven car park (busy, paid at times); steps on the right of the boat ramp." },
     overnight: "Bouddi NP Putty Beach campground; Terrigal/Wamberal holiday parks.",
@@ -915,6 +958,7 @@ export const SPOTS = [
   },
   {
     id: "norah-head", type: "spear", name: "Norah Head (Cabbage Tree Bay)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/norah-head/584204204e65fad6a77093ae", name: "Norah Head" },
     region: "Central Coast/Newcastle", lat: -33.2799, lon: 151.5740, tide: "A",
     access: { lat: -33.2810, lon: 151.5735, note: "Cabbage Tree Harbour boat ramp car park; Lighthouse Reserve for the south side." },
     overnight: "Norah Head Holiday Park.",
@@ -944,6 +988,7 @@ export const SPOTS = [
   },
   {
     id: "swansea-flagstaff", type: "spear", name: "Swansea Heads — Flagstaff (Moon Island)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/swansea/584204204e65fad6a77093a7", name: "Swansea" },
     region: "Central Coast/Newcastle", lat: -33.0874, lon: 151.6681, tide: "A",
     access: { lat: -33.0883, lon: 151.6618, note: "Park at Reids Reserve, Swansea Heads; 20 m walk to the water." },
     overnight: "Caves Beach / Swansea holiday parks.",
@@ -974,6 +1019,7 @@ export const SPOTS = [
   // ---------------- PORT STEPHENS / GREAT LAKES ----------------
   {
     id: "boat-harbour-ps", type: "spear", name: "Boat Harbour (Port Stephens)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/one-mile-beach/584204204e65fad6a7709380", name: "One Mile Beach" },
     region: "Port Stephens/Great Lakes", lat: -32.7895, lon: 152.1158, tide: "A",
     access: { lat: -32.7880, lon: 152.1140, note: "Gan Gan Rd → Blanch St to the end (small 'Boat Harbour' sign); gully from the car park to the water." },
     overnight: "One Mile Beach Holiday Park (next bay).",
@@ -1002,6 +1048,7 @@ export const SPOTS = [
   },
   {
     id: "bennetts-head", type: "spear", name: "Bennetts Head (Forster)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/bennetts-head/584204204e65fad6a770937c", name: "Bennetts Head" },
     region: "Port Stephens/Great Lakes", lat: -32.1850, lon: 152.5400, tide: "A",
     access: { lat: -32.1842, lon: 152.5366, note: "Bennetts Head Reserve car park; Pebbly Beach car park for the north side." },
     overnight: "Forster holiday parks; Booti Booti NP — The Ruins campground.",
@@ -1029,6 +1076,7 @@ export const SPOTS = [
   },
   {
     id: "seal-rocks-sugarloaf", type: "spear", name: "Sugarloaf Point (Seal Rocks)",
+    surfline: { url: "https://www.surfline.com/surf-report/seal-rocks/640b958ade81d540cf0c77d7", name: "Seal Rocks" },
     region: "Port Stephens/Great Lakes", lat: -32.4420, lon: 152.5410, tide: "A",
     access: { lat: -32.4410, lon: 152.5391, note: "Lighthouse walk from Kinka Rd car park." },
     overnight: "Seal Rocks Holiday Park; Treachery Camp.",
@@ -1059,6 +1107,7 @@ export const SPOTS = [
   // ---------------- MID NORTH COAST ----------------
   {
     id: "crowdy-head", type: "spear", name: "Crowdy Head",
+    surfline: { url: "https://www.surfline.com/surf-report/crowdy-head/584204204e65fad6a7709361", name: "Crowdy Head" },
     region: "Mid North Coast", lat: -31.8395, lon: 152.7550, tide: "A",
     access: { lat: -31.8400, lon: 152.7500, note: "Crowdy Head lighthouse / harbour car parks." },
     overnight: "Crowdy Bay NP campgrounds (Diamond Head, Kylies Beach).",
@@ -1086,6 +1135,7 @@ export const SPOTS = [
   },
   {
     id: "tacking-point", type: "spear", name: "Tacking Point (Port Macquarie)",
+    surfline: { url: "https://www.surfline.com/surf-report/lighthouse-beach/584204204e65fad6a7709356", name: "Lighthouse Beach" },
     region: "Mid North Coast", lat: -31.4755, lon: 152.9395, tide: "A",
     access: { lat: -31.4759, lon: 152.9370, note: "Tacking Point lighthouse car park, Lighthouse Rd." },
     overnight: "Port Macquarie holiday parks.",
@@ -1113,6 +1163,7 @@ export const SPOTS = [
   },
   {
     id: "swr-ladies-reef", type: "spear", name: "South West Rocks — Ladies Reef", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/south-west-rocks/5d81641690e4d600019e669c", name: "South West Rocks" },
     region: "Mid North Coast", lat: -30.8803, lon: 153.0428, tide: "A",
     access: { lat: -30.8829, lon: 153.0441, note: "Car park next to South West Rocks Surf Club, or the headland car park east of Horseshoe Bay." },
     overnight: "Trial Bay Gaol campground (NPWS); SWR holiday parks.",
@@ -1140,6 +1191,7 @@ export const SPOTS = [
   },
   {
     id: "trial-bay-gaol", type: "spear", name: "Trial Bay Gaol — Bait Reef (South West Rocks)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/front-beach/640b95e38284fe4cafafe4d8", name: "Front Beach" },
     region: "Mid North Coast", lat: -30.8753, lon: 153.0692, tide: "A",
     access: { lat: -30.8770, lon: 153.0690, note: "Drive round through the gaol camping area; park near the north-western corner (NPWS entry fee)." },
     overnight: "Trial Bay Gaol campground (NPWS, on site).",
@@ -1172,6 +1224,7 @@ export const SPOTS = [
   // ---------------- COFFS COAST ----------------
   {
     id: "sawtell-headland", type: "spear", name: "Sawtell Headland",
+    surfline: { url: "https://www.surfline.com/surf-report/sawtell-main-beach/584204204e65fad6a7709329", name: "Sawtell Main Beach" },
     region: "Coffs Coast", lat: -30.3770, lon: 153.1060, tide: "A",
     access: { lat: -30.3766, lon: 153.1038, note: "Sawtell Headland reserve car park, Boronia St." },
     overnight: "Sawtell Beach Holiday Park.",
@@ -1199,6 +1252,7 @@ export const SPOTS = [
   },
   {
     id: "woolgoolga-headland", type: "spear", name: "Woolgoolga Headland (just N of Coffs)",
+    surfline: { url: "https://www.surfline.com/surf-report/woolgoolga/584204204e65fad6a7709317", name: "Woolgoolga" },
     region: "Coffs Coast", lat: -30.1110, lon: 153.2140, tide: "A",
     access: { lat: -30.1109, lon: 153.2112, note: "Woolgoolga Headland car park, Ocean St." },
     overnight: "Woolgoolga Beach Holiday Park.",
@@ -1228,6 +1282,7 @@ export const SPOTS = [
   // ---------------- Research round 3 (8 Oct 2026): Google/Reddit/Facebook snippets ----------------
   {
     id: "maloneys-bay", type: "spear", name: "Bass Point — Maloneys Bay (south side)",
+    surfline: { url: "https://www.surfline.com/surf-report/redsands/584204204e65fad6a770941b", name: "Redsands" },
     region: "Shoalhaven/Illawarra", lat: -34.6005, lon: 150.8885, tide: "A",
     access: { lat: -34.5972, lon: 150.8876, note: "Maloney's Bay car park, Bass Point Reserve (gate hours apply)." },
     overnight: "Killalea campground (next door, paid).",
@@ -1256,6 +1311,7 @@ export const SPOTS = [
   },
   {
     id: "redhead-point", type: "spear", name: "Redhead Point (Newcastle)",
+    surfline: { url: "https://www.surfline.com/surf-report/redhead/584204204e65fad6a77093a8", name: "Redhead" },
     region: "Central Coast/Newcastle", lat: -33.0150, lon: 151.7290, tide: "A",
     access: { lat: -33.0160, lon: 151.7240, note: "Redhead Beach SLSC car park; walk to the north end and onto the point rocks." },
     overnight: "Belmont / Swansea holiday parks.",
@@ -1280,6 +1336,7 @@ export const SPOTS = [
   },
   {
     id: "hat-head", type: "spear", name: "Hat Head (the point / Connors)",
+    surfline: { url: "https://www.surfline.com/surf-report/hat-head/584204204e65fad6a7709335", name: "Hat Head" },
     region: "Mid North Coast", lat: -31.0535, lon: 153.0650, tide: "A",
     access: { lat: -31.0545, lon: 153.0560, note: "Hat Head village; walk out to the headland, or to Connors Beach (south side)." },
     overnight: "Hat Head Holiday Park; Hat Head NP (Hungry Gate campground).",
@@ -1306,6 +1363,7 @@ export const SPOTS = [
   // ---------------- Research round 4 (11 Oct 2026): new spear spots from Facebook groups, forums + Reddit snippets ----------------
   {
     id: "mystery-bay", type: "spear", name: "Mystery Bay (Tilba)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/loader-beach/640b94324878eb4f351c3b2f", name: "Loader Beach" },
     region: "South Coast", lat: -36.3000, lon: 150.1360, tide: "A",
     access: { lat: -36.2995, lon: 150.1340, note: "Main Mystery Bay car park at the end of Mystery Bay Rd (not the first little car park on the left)." },
     overnight: "Mystery Bay campground (Eurobodalla council, basic, on site).",
@@ -1331,6 +1389,7 @@ export const SPOTS = [
   },
   {
     id: "barlings-island", type: "spear", name: "Barlings Island (Tomakin)",
+    surfline: { url: "https://www.surfline.com/surf-report/barlings-beach/584204204e65fad6a770944c", name: "Barlings Beach" },
     region: "South Coast", lat: -35.8329, lon: 150.2030, tide: "A",
     access: { lat: -35.8300, lon: 150.1955, note: "Barlings Beach car park off George Bass Dr; walk to the south end — the island is reached across the sand/rock bar." },
     overnight: "Barlings Beach Holiday Park (next door).",
@@ -1356,6 +1415,7 @@ export const SPOTS = [
   },
   {
     id: "bawley-point", type: "spear", name: "Bawley Point",
+    surfline: { url: "https://www.surfline.com/surf-report/bawley-point/584204204e65fad6a7709440", name: "Bawley Point" },
     region: "South Coast", lat: -35.5070, lon: 150.4005, tide: "A",
     access: { lat: -35.5085, lon: 150.3975, note: "Bawley Point village; walk onto the point rocks from the end of Johnston St / the point reserve." },
     overnight: "Bawley Point / Kioloa holiday parks; Murramarang NP camps (Pretty, Pebbly beaches).",
@@ -1381,6 +1441,7 @@ export const SPOTS = [
   },
   {
     id: "depot-beach", type: "spear", name: "Depot Beach / Durras North rocks",
+    surfline: { url: "https://www.surfline.com/surf-report/depot-beach/584204204e65fad6a7709442", name: "Depot Beach" },
     region: "South Coast", lat: -35.6225, lon: 150.3245, tide: "A",
     access: { lat: -35.6262, lon: 150.3215, note: "Depot Beach day-use area (Murramarang NP, park fee); walk to the northern rocks." },
     overnight: "Depot Beach campground (NPWS, book online).",
@@ -1405,6 +1466,7 @@ export const SPOTS = [
   },
   {
     id: "shellharbour-village", type: "spear", name: "Shellharbour Village (front of the holiday park)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/the-pool/584204204e65fad6a7709418", name: "The Pool" },
     region: "Shoalhaven/Illawarra", lat: -34.5815, lon: 150.8755, tide: "A",
     access: { lat: -34.5811, lon: 150.8732, note: "Shellharbour Beachside Holiday Park / John St; rock entry in front of the park." },
     overnight: "Shellharbour Beachside Holiday Park (right there).",
@@ -1430,6 +1492,7 @@ export const SPOTS = [
   },
   {
     id: "catherine-hill-bay", type: "spear", name: "Catherine Hill Bay (old coal loader)", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/catherine-hill-bay/584204204e65fad6a77093ac", name: "Catherine Hill Bay" },
     region: "Central Coast/Newcastle", lat: -33.1600, lon: 151.6330, tide: "A",
     access: { lat: -33.1585, lon: 151.6315, note: "Catherine Hill Bay (Catho) — park near the old jetty/coal loader at the south end of the beach." },
     overnight: "Swansea / Caves Beach holiday parks; Wallarah NP has no camping.",
@@ -1457,6 +1520,7 @@ export const SPOTS = [
   },
   {
     id: "port-macquarie-rocks", type: "spear", name: "Port Macquarie rocks (Shelly Beach → Miners)",
+    surfline: { url: "https://www.surfline.com/surf-report/miners-beach/584204204e65fad6a7709354", name: "Miners Beach" },
     region: "Mid North Coast", lat: -31.4600, lon: 152.9370, tide: "A",
     access: { lat: -31.4578, lon: 152.9327, note: "Shelly Beach car park, Shelly Beach Rd; the coastal walk links the rocky points down to Miners Beach." },
     overnight: "Port Macquarie holiday parks.",
@@ -1480,6 +1544,7 @@ export const SPOTS = [
   },
   {
     id: "grants-head", type: "spear", name: "Grants Head (Bonny Hills)",
+    surfline: { url: "https://www.surfline.com/surf-report/grants/584204204e65fad6a7709358", name: "Grants" },
     region: "Mid North Coast", lat: -31.6020, lon: 152.8490, tide: "A",
     access: { lat: -31.6010, lon: 152.8440, note: "Grants Head reserve, Bonny Hills; short walk onto the headland rocks." },
     overnight: "Bonny Hills / Lake Cathie holiday parks.",
@@ -1504,6 +1569,7 @@ export const SPOTS = [
   },
   {
     id: "diamond-head-spear", type: "spear", name: "Diamond Head (Crowdy Bay NP) — rocks",
+    surfline: { url: "https://www.surfline.com/surf-report/diamond-head/584204204e65fad6a770935d", name: "Diamond Head" },
     region: "Mid North Coast", lat: -31.7180, lon: 152.8005, tide: "A",
     access: { lat: -31.7166, lon: 152.7975, note: "Diamond Head campground (Crowdy Bay NP); walk onto the headland rocks." },
     overnight: "Diamond Head campground (NPWS, showers, on site).",
@@ -1529,6 +1595,7 @@ export const SPOTS = [
   // ---------------- Research round 4: new surf breaks ----------------
   {
     id: "south-broulee", type: "surf", name: "South Broulee",
+    surfline: { url: "https://www.surfline.com/surf-report/south-broulee-beach/584204204e65fad6a7709449", name: "South Broulee Beach" },
     region: "South Coast", lat: -35.8610, lon: 150.1735, tide: "A",
     access: { lat: -35.8585, lon: 150.1700, note: "South Broulee car park off Coronation Dr (south side of Broulee Head)." },
     overnight: "Broulee / Barlings Beach holiday parks.",
@@ -1545,6 +1612,7 @@ export const SPOTS = [
   },
   {
     id: "bawley-point-surf", type: "surf", name: "Bawley Point (the point)",
+    surfline: { url: "https://www.surfline.com/surf-report/bawley-point/584204204e65fad6a7709440", name: "Bawley Point" },
     region: "South Coast", lat: -35.5080, lon: 150.4025, tide: "A",
     access: { lat: -35.5085, lon: 150.3975, note: "Bawley Point village; walk out to the point." },
     overnight: "Bawley Point / Kioloa holiday parks; Murramarang NP camps.",
@@ -1563,6 +1631,7 @@ export const SPOTS = [
   },
   {
     id: "pretty-beach", type: "surf", name: "Pretty Beach (Murramarang NP)",
+    surfline: { url: "https://www.surfline.com/surf-report/merry-beach/640b938ae920305891df8340", name: "Merry Beach" },
     region: "South Coast", lat: -35.5620, lon: 150.3765, tide: "A",
     access: { lat: -35.5605, lon: 150.3735, note: "Pretty Beach campground / day area (Murramarang NP, park fee), off Pretty Beach Rd." },
     overnight: "Pretty Beach campground (NPWS, right on the beach).",
@@ -1580,6 +1649,7 @@ export const SPOTS = [
   // ---------------- Quality breaks for confident surfers (to ~6 ft), from Wannasurf guides ----------------
   {
     id: "sandon-point", type: "surf", name: "Sandon Point (Bulli)",
+    surfline: { url: "https://www.surfline.com/surf-report/sandon-point/5842041f4e65fad6a7708c0a", name: "Sandon Point" },
     region: "Shoalhaven/Illawarra", lat: -34.3285, lon: 150.929, tide: "A",
     access: { lat: -34.3262, lon: 150.9238, note: "Car park beside the bike track at the end of Point St, Bulli; walk down and jump off the rocks." },
     overnight: "Bulli Beach Tourist Park (council, right there).",
@@ -1595,6 +1665,7 @@ export const SPOTS = [
   },
   {
     id: "minnamurra", type: "surf", name: "Minnamurra rivermouth",
+    surfline: { url: "https://www.surfline.com/surf-report/rangoon/584204204e65fad6a7709423", name: "Rangoon" },
     region: "Shoalhaven/Illawarra", lat: -34.6275, lon: 150.8605, tide: "A",
     access: { lat: -34.624, lon: 150.8545, note: "Minnamurra beach car park (Beach St); paddle across to the bank." },
     overnight: "Kiama / Minnamurra holiday parks; Killalea campground.",
@@ -1610,6 +1681,7 @@ export const SPOTS = [
   },
   {
     id: "north-bendalong", type: "surf", name: "North Bendalong",
+    surfline: { url: "https://www.surfline.com/surf-report/bendalong-boat-ramp/584204204e65fad6a7709431", name: "Bendalong Boat Ramp" },
     region: "South Coast", lat: -35.241, lon: 150.5355, tide: "A",
     access: { lat: -35.2445, lon: 150.5315, note: "Car park beside the Bendalong caravan park at the end of the road; follow the track." },
     overnight: "Bendalong Point holiday park; Inyadda / Manyana parks.",
@@ -1626,6 +1698,7 @@ export const SPOTS = [
   },
   {
     id: "merimbula-bar", type: "surf", name: "Merimbula Bar",
+    surfline: { url: "https://www.surfline.com/surf-report/merimbula-bar/5842041f4e65fad6a7708c01", name: "Merimbula Bar" },
     region: "Far South Coast", lat: -36.9005, lon: 149.926, tide: "A",
     access: { lat: -36.8987, lon: 149.9275, note: "Merimbula Aquarium car park (Lake St) — you can see the wave from there." },
     overnight: "Merimbula holiday parks.",
@@ -1641,6 +1714,7 @@ export const SPOTS = [
   },
   {
     id: "moruya-rivermouth", type: "surf", name: "Moruya Heads rivermouth",
+    surfline: { url: "https://www.surfline.com/surf-report/moruya/5842041f4e65fad6a7708c02", name: "Moruya" },
     region: "Far South Coast", lat: -35.908, lon: 150.155, tide: "A",
     access: { lat: -35.9135, lon: 150.152, note: "Shelly Beach, Moruya Heads — look NW to the rock wall (or North Head on the other side)." },
     overnight: "Moruya Heads / Broulee holiday parks.",
@@ -1658,6 +1732,7 @@ export const SPOTS = [
   },
   {
     id: "north-avoca", type: "surf", name: "North Avoca",
+    surfline: { url: "https://www.surfline.com/surf-report/north-avoca/584204204e65fad6a77093ba", name: "North Avoca" },
     region: "Central Coast/Newcastle", lat: -33.456, lon: 151.4385, tide: "A",
     access: { lat: -33.459, lon: 151.436, note: "North Avoca SLSC (Tramway Dr) car park." },
     overnight: "Avoca / Terrigal holiday parks.",
@@ -1675,6 +1750,7 @@ export const SPOTS = [
   },
   {
     id: "bar-beach-newcastle", type: "surf", name: "Bar Beach (Newcastle)",
+    surfline: { url: "https://www.surfline.com/surf-report/bar-beach/584204204e65fad6a770939f", name: "Bar Beach" },
     region: "Central Coast/Newcastle", lat: -32.9419, lon: 151.769, tide: "A",
     access: { lat: -32.94, lon: 151.766, note: "Bar Beach car park (Memorial Dr)." },
     overnight: "Newcastle / Stockton holiday parks.",
@@ -1690,6 +1766,7 @@ export const SPOTS = [
   },
   {
     id: "tuncurry-breakwall", type: "surf", name: "Tuncurry breakwall",
+    surfline: { url: "https://www.surfline.com/surf-report/tuncurry-breakwall/5842041f4e65fad6a7708bf0", name: "Tuncurry Breakwall" },
     region: "Port Stephens/Great Lakes", lat: -32.1745, lon: 152.509, tide: "A",
     access: { lat: -32.1735, lon: 152.504, note: "Off Beach St, Tuncurry — road beside the boat wharf to the breakwall car park." },
     overnight: "Tuncurry / Forster holiday parks.",
@@ -1705,6 +1782,7 @@ export const SPOTS = [
   },
   {
     id: "north-haven", type: "surf", name: "North Haven (Camden Haven wall)",
+    surfline: { url: "https://www.surfline.com/surf-report/north-haven/584204204e65fad6a770935b", name: "North Haven" },
     region: "Mid North Coast", lat: -31.636, lon: 152.8215, tide: "A",
     access: { lat: -31.6355, lon: 152.817, note: "End of North Haven, just past the caravan park." },
     overnight: "North Haven / Dunbogan holiday parks; Diamond Head campground.",
@@ -1720,6 +1798,7 @@ export const SPOTS = [
   },
   {
     id: "horseshoe-bay-swr", type: "surf", name: "Horseshoe Bay (South West Rocks)",
+    surfline: { url: "https://www.surfline.com/surf-report/south-west-rocks/5d81641690e4d600019e669c", name: "South West Rocks" },
     region: "Mid North Coast", lat: -30.8826, lon: 153.041, tide: "A",
     access: { lat: -30.884, lon: 153.0395, note: "Horseshoe Bay car park, South West Rocks." },
     overnight: "South West Rocks holiday parks; Trial Bay Gaol campground.",
@@ -1735,6 +1814,7 @@ export const SPOTS = [
   },
   {
     id: "delicate-nobby", type: "surf", name: "Delicate Nobby (Crescent Head)",
+    surfline: { url: "https://www.surfline.com/surf-report/racecourse-beach/6630f85991ee4fee77dfd147", name: "Racecourse Beach" },
     region: "Mid North Coast", lat: -31.2585, lon: 152.9725, tide: "A",
     access: { lat: -31.2605, lon: 152.9684, note: "Delicate Nobby campground, Point Plomer Rd (south of Crescent Head) — gravel road." },
     overnight: "Delicate Nobby campground (on the beach).",
