@@ -1,10 +1,10 @@
 // App shell: Home, Map, Outlook and List views, plus the spot sheet.
 import { SPOTS, REGIONS } from "../data/spots.js";
 import { loadForecast, forecastDays } from "./data.js";
-import { scoreSpotDay, scoreHourAt, bestTime, setSharks, sharksNear, WINDOWS, fmtTime, card, ft } from "./score.js";
+import { scoreSpotDay, bestTime, setSharks, sharksNear, WINDOWS, fmtTime, card, ft } from "./score.js";
 import { correct, zoneOf } from "./correct.js";
 import { loadLive, cachedLive, bomText } from "./live.js";
-import { tideGraph, bindTideScrub, surfTable, mph } from "./charts.js";
+import { windGraph, bindWindScrub } from "./charts.js";
 import { savedOrigin, saveOrigin, driveTimes, fmtDrive } from "./location.js";
 import { loadBuoys, cachedBuoys } from "./buoys.js";
 import { renderHome } from "./home.js";
@@ -336,7 +336,7 @@ function openSheet(id, winLabel) {
     const pts = p.cap != null ? `max ${p.cap}` : p.max != null ? `${p.pts.toFixed(1)}/${p.max}` : `${p.pts > 0 ? "+" : ""}${p.pts.toFixed(1)}`;
     return `<div class="part"><span><span class="tag ${p.tag === "local rule" ? "local" : ""}">${esc(p.tag)}</span>${esc(p.text)}</span><span class="pts">${pts}</span></div>`;
   }).join("") : "";
-  const table = surfTable(s, fcs, state.day, side, i => scoreHourAt(s, fcs, i, r.lead), colour);
+  const table = windGraph(s, fcs, state.day, side);
   const bt = bestOf(id, state.day);
   const best = bt ? `<p class="best"><b>${bestLabel(bt)}</b></p>` : "";
   // group repeats (same beach, species and type), newest first
@@ -380,13 +380,13 @@ function openSheet(id, winLabel) {
     ${best}${sharks}
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
     ${table}
-    <div class="tidebox"><small>Tide</small>${tideGraph(s, fcs, state.day, win)}</div>
     ${rainStrip(fcs, state.day)}
     <div class="gorow"><a class="go" href="${dirUrl(s.access?.lat ?? s.lat, s.access?.lon ?? s.lon)}" target="_blank" rel="noopener">Directions</a>${s.surfline ? `<a class="go sl" href="${s.surfline.url}#sl_universal_link" target="_blank" rel="noopener">Surfline<small>${esc(s.surfline.name)}</small></a>` : ""}</div>
     ${bom}${camps}
     <details class="more"><summary>Why ${fmtScore(win.score, win.no)}?</summary><div class="parts">${parts}</div></details>
     ${checked}`;
-  bindTideScrub($("#sheetBody svg.tide"), s, fcs, state.day);
+  const nowH = (Date.now() - Date.parse(state.day + "T00:00:00+11:00")) / 36e5;
+  bindWindScrub($("#sheetBody .windbox"), s, fcs, state.day, side, nowH > 0 && nowH < 24 ? nowH : bt ? bt.a : 7);
   $("#sheet").hidden = false;
 }
 

@@ -472,3 +472,11 @@ body { text-shadow: none; }
 .infocard h3 { margin: 0; font: 700 .9rem var(--body); color: var(--ink); }
 .infocard .kv { margin: 0; }
 .infocard details.more { margin-top: 2px; }
+/* wind chart (Apple Weather style, drag to read) */
+.windbox { margin-top: 10px; padding: 10px 10px 6px; border-radius: 18px; background: var(--bg); border: 1px solid var(--line); }
+.wread { display: grid; justify-items: center; gap: 1px; min-height: 66px; text-align: center; }
+.wread small { color: var(--muted); font: 600 .78rem var(--body); }
+.wread b { font: 800 1.9rem/1.05 var(--display); color: var(--ink); letter-spacing: -.02em; }
+.wread b span { font-size: 1.25rem; font-weight: 800; }
+.wread em { font: 700 .72rem var(--body); font-style: normal; color: #08263f; background: var(--wc); border-radius: 999px; padding: 2px 9px; }
+.chart.wind { touch-action: pan-y; cursor: crosshair; -webkit-user-select: none; user-select: none; }
