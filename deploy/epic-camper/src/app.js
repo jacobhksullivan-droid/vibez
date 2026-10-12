@@ -364,19 +364,21 @@ function openSheet(id, winLabel) {
   const src = notes.filter(n => !n.startsWith("⚠")).map(n => n.split(/ (?:buoy|wind now|wind timing)/)[0]);
   const checked = `<p class="sub small">8 models blended${src.length ? " · checked vs " + esc([...new Set(src)].join(", ")) : ""}${r.agree?.bad ? " · models disagree, low confidence" : ""}</p>`;
 
-  const info = s.type === "spear"
-    ? `<dl class="kv"><dt>Entry</dt><dd>${esc(s.spear.entry)}</dd><dt>Depth</dt><dd>${s.depth[0]}–${s.depth[1]} m</dd><dt>Kingfish</dt><dd>${"●".repeat(s.spear.kingfish)}${"○".repeat(3 - s.spear.kingfish)}</dd><dt>Species</dt><dd>${esc(s.spear.species.join(", "))}</dd><dt>Hazards</dt><dd>${esc(s.hazards)}</dd></dl>`
-    : `<dl class="kv"><dt>Break</dt><dd>${esc(s.terrain)}</dd><dt>Hazards</dt><dd>${esc(s.hazards)}</dd></dl>`;
-  const rules = (s.rules || []).map(x => `<li>${esc(x.why)}</li>`).join("");
-  const intel = (s.intel || []).map(i => `<li>${esc(i.text)}${i.url ? ` <a href="${esc(i.url)}" target="_blank" rel="noopener">source</a>` : ""}</li>`).join("");
+  // Spot info: the key facts and the handful of local tips that matter, short and always visible
+  const short = t => { const x = String(t || "").replace(/^(Local( rule)?|Generic rule)\s*:\s*/i, "").trim(); const m = x.match(/^.{20,140}?[.;!](\s|$)/); return (m ? m[0] : x.length > 140 ? x.slice(0, 137) + "…" : x).trim().replace(/[;,]$/, ""); };
+  const keyFacts = s.type === "spear"
+    ? [["Entry", s.spear.entry], ["Depth", `${s.depth[0]}–${s.depth[1]} m`], ["Kingfish", "●".repeat(s.spear.kingfish) + "○".repeat(3 - s.spear.kingfish)], ["Fish", s.spear.species.slice(0, 5).join(", ")], ["Watch", s.hazards]]
+    : [["Break", s.terrain], ["Watch", s.hazards]];
+  const tips = [...new Set([...(s.rules || []).map(r => short(r.why)), ...(s.intel || []).map(i => short(i.text))])].filter(Boolean).slice(0, 4);
+  const infoCard = `<section class="infocard"><dl class="kv">${keyFacts.map(([k, v]) => `<dt>${k}</dt><dd>${esc(short(v))}</dd>`).join("")}</dl>${tips.length ? `<ul class="tips">${tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</section>`;
 
   $("#sheetBody").innerHTML = `
     <div class="sh-head"><span class="badge" style="--c:${colour(win.score, win.no)}">${fmtScore(win.score, win.no)}</span>
       <div><h2>${esc(s.name)}</h2><small><span class="typechip ${s.type}">${TYPE_ICON[s.type]} ${s.type === "surf" ? "Surf" : "Spear"}</span>${PARTNER[id].length ? `<span class="typechip both">+ ${PARTNER[id][0].type === "surf" ? "surf" : "spear"} here too</span>` : ""} ${dayName}${r.conf !== "high" ? ` · ${r.conf} confidence` : ""}</small></div></div>
+    ${infoCard}
     ${PARTNER[id].map(o => `<button class="partner" type="button" data-open="${o.id}">${TYPE_ICON[o.type]} ${o.type === "surf" ? "Surf" : "Spear"} here too: <b>${esc(o.name)}</b> <span class="badge" style="--c:${colour(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}">${fmtScore(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}</span> ›</button>`).join("")}
     ${legal ? `<p class="warn">No spearing: inside ${esc(legal)}</p>` : ""}
     ${win.no ? `<p class="no">${esc(win.no)}</p>` : ""}
-    <section class="infocard"><h3>Spot info</h3>${info}${rules || intel ? `<details class="more"><summary>Local knowledge</summary>${rules ? `<p class="sub">Local rules</p><ul>${rules}</ul>` : ""}${intel ? `<p class="sub">Local intel</p><ul>${intel}</ul>` : ""}</details>` : ""}</section>
     ${best}${sharks}
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
     ${table}

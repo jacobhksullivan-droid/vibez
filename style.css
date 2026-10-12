@@ -480,3 +480,7 @@ body { text-shadow: none; }
 .wread b span { font-size: 1.25rem; font-weight: 800; }
 .wread em { font: 700 .72rem var(--body); font-style: normal; color: #08263f; background: var(--wc); border-radius: 999px; padding: 2px 9px; }
 .chart.wind { touch-action: pan-y; cursor: crosshair; -webkit-user-select: none; user-select: none; }
+.infocard .kv { display: grid; grid-template-columns: 62px 1fr; gap: 4px 10px; font-size: .85rem; }
+.infocard .kv dt { color: var(--muted); font-weight: 600; }
+.infocard .kv dd { margin: 0; }
+.infocard .tips { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 3px; font-size: .82rem; color: var(--ink); }
