@@ -206,29 +206,41 @@ function explain(stops, resFor, sideOf, skipped) {
   const why = [];
   const dshort = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric" });
   const startSide = sideOf(stops[0]) === "N" ? "north" : "south", otherSide = startSide === "north" ? "south" : "north";
-  // why start there: the forecast for the first 3 days, side by side (spot ratings + recent rain)
+  // where it starts, in plain words, and the nearest spot as a landmark
+  const lat = stops[0].lat;
+  const where = lat < -36 ? "far south coast" : lat < -35 ? "south coast" : lat < -34 ? "Illawarra / Shoalhaven" : lat < -32.6 ? "Central Coast / Newcastle" : lat < -31.5 ? "mid north coast" : "far north (Port Macquarie and up)";
+  const mark = SPOTS.map(sp => [sp, km(sp, stops[0])]).sort((p, q) => p[1] - q[1])[0][0].name.split(/[(—,]/)[0].trim();
+  const start = `Starting on the ${where} (around ${mark})`;
+  // compare the two coasts over the first 3 trip days the forecast covers: ratings, recent rain, and how often the wind is clean
   const early = NIGHTS.slice(0, 3).filter(d => resFor[d]);
-  if (early.length) {
+  if (!early.length) { why.push(`${start} for now — the forecast doesn't reach ${dshort(NIGHTS[0])} yet, so it's going on each spot's usual quality. This will change once the real forecast is in.`); }
+  else {
     const stat = side => {
-      let sc = [], rain = [];
+      const sc = [], rain = [], clean = [];
       for (const d of early) {
-        const res = resFor[d], top = SPOTS.filter(sp => sideOf(sp) === side[0].toUpperCase() && res[sp.id] && !res[sp.id].best?.no)
-          .map(sp => res[sp.id]).sort((a, b) => b.best.score - a.best.score).slice(0, 6);
-        top.forEach(r => { sc.push(r.best.score); if (r.best.rep?.ctx?.rain72 != null) rain.push(r.best.rep.ctx.rain72); });
+        const res = resFor[d];
+        const top = SPOTS.filter(sp => sideOf(sp) === side[0].toUpperCase() && res[sp.id] && !res[sp.id].best?.no).map(sp => [sp, res[sp.id]])
+          .sort((p, q) => q[1].best.score - p[1].best.score).slice(0, 8);
+        for (const [sp, r] of top) {
+          sc.push(r.best.score);
+          const c = r.best.rep?.ctx; if (!c) continue;
+          rain.push(c.rain72);
+          const facing = sp.facing ?? sp.sides?.[0]?.facing ?? 90, off = Math.abs((((c.wdir - (facing + 180)) % 360) + 540) % 360 - 180);
+          clean.push(c.wspd < 5 || off <= 70 ? 1 : 0); // light, offshore or cross-offshore
+        }
       }
       const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
-      return { sc: avg(sc), rain: avg(rain) };
+      return { sc: avg(sc), rain: avg(rain), clean: avg(clean) };
     };
-    const a = stat(startSide), b = stat(otherSide);
-    const span = early.length > 1 ? `${dshort(early[0])}–${dshort(early[early.length - 1])}` : dshort(early[0]);
+    const a = stat(startSide), b = stat(otherSide), span = early.length > 1 ? `${dshort(early[0])}–${dshort(early[early.length - 1])}` : dshort(early[0]);
     const r = [];
-    if (a.sc != null && b.sc != null && a.sc > b.sc + 0.2) r.push(`its best spots rate ${a.sc.toFixed(1)}/10 vs ${b.sc.toFixed(1)} ${otherSide} for ${span}`);
-    if (a.rain != null && b.rain != null && a.rain < b.rain - 3) r.push(`it's drier: ~${Math.round(a.rain)} mm of rain in the 3 days before vs ~${Math.round(b.rain)} mm ${otherSide}`);
-    const Side = startSide[0].toUpperCase() + startSide.slice(1);
-    if (r.length) why.push(`${Side} first — ${r.join(", and ")}.`);
-    else why.push(`${Side} first — both coasts look about the same for ${span}, so it goes the way that works out best over the whole trip.`);
-  } else why.push(`${startSide[0].toUpperCase() + startSide.slice(1)} first for now — the forecast doesn't reach ${dshort(NIGHTS[0])} yet, so it's going on each spot's usual quality. This will change once the real forecast is in.`);
-  if (skipped) why.push(`Skips the ${skipped} coast — its forecast is terrible for the whole trip.`);
+    if (a.rain != null && b.rain != null && a.rain < b.rain - 3) r.push(`to get away from the rain — ~${Math.round(a.rain)} mm in the 3 days before vs ~${Math.round(b.rain)} mm ${otherSide}`);
+    if (a.clean != null && b.clean != null && a.clean > b.clean + 0.15) r.push(`for cleaner winds — offshore or light ${Math.round(a.clean * 100)}% of the time vs ${Math.round(b.clean * 100)}% ${otherSide}`);
+    if (a.sc != null && b.sc != null && a.sc > b.sc + 0.2) r.push(`because the surf and dives rate higher there — ${a.sc.toFixed(1)}/10 vs ${b.sc.toFixed(1)} ${otherSide}`);
+    if (r.length) why.push(`${start} ${r.join("; and ")} (${span}).`);
+    else why.push(`${start} — both coasts look about the same for ${span} (rain, wind and ratings), so it goes the way that works out best over the whole trip.`);
+  }
+  if (skipped) why.push(`Skipping the ${skipped} coast — its forecast is terrible for the whole trip.`);
   return why;
 }
 
