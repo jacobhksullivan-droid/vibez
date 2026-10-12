@@ -293,9 +293,12 @@ function renderPlan() {
   const P = makePlan(dayResults);
   const dname = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
   const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
+  // north / south of Sydney tag
+  const nsTag = lat => (lat > -33.6 ? `<span class="nstag n">N</span>` : lat < -34.0 ? `<span class="nstag s">S</span>` : "");
+  const leg = (m, from) => (m == null ? "" : m < 3 ? `right at ${esc(from)}` : `${mins(m)} drive from ${esc(from)}`);
   const sess = (x, day) => `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
-      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b><small>${x.min ? x.min + " min from camp" : "at camp"}</small></span></button>`;
+      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b> ${nsTag(SPOTS.find(sp => sp.id === x.id)?.lat ?? 0)}<small>${leg(x.drive ?? x.min, x.driveFrom || "camp")}</small></span></button>`;
   const days = P.days.map(e => {
     const am = e.sessions.filter(x => x.when === "Morning"), pm = e.sessions.filter(x => x.when !== "Morning");
     const legStart = e.day === "2026-10-26" ? `<h3 class="pleg">The others join · 26–31 Oct</h3>` : "";
@@ -304,7 +307,7 @@ function renderPlan() {
       ${am.map(x => sess(x, e.day)).join("")}
       ${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
       ${pm.map(x => sess(x, e.day)).join("")}
-      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b></span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.drive ? mins(e.drive) + " drive" + (e.from ? " from " + e.from : "") : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
+      ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b> ${nsTag(e.camp.lat)}</span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.toCamp != null ? leg(e.toCamp, e.toCampFrom) : e.drive ? `${mins(e.drive)} drive from ${esc(e.from || "last camp")}` : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
     </article>`;
   }).join("");
   $("#plan").innerHTML = `<section class="hsec"><h2>North or south first?</h2>

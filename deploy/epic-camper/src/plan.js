@@ -188,7 +188,16 @@ export function makePlan(dayResults) {
     if (k === 0) notes.push("Pick up the van in Bankstown at 9am.");
     const pm = use(pick.pm, k);
     if (pm) out.push({ when: "Arvo", ...pm });
-    days.push({ day: d, who: d < TRIP.meet ? "You + Seb" : "All four", forecast: !!resFor[d], sessions: out, notes, camp: c, power: k === 0,
+    // drive legs: last night's camp (or Bankstown) → morning spot → arvo spot → tonight's camp
+    const short = n => n.split(/[(—,]/)[0].trim();
+    let at = prev ? { name: "camp", pt: prev, isCamp: true } : { name: TRIP.home.name, pt: TRIP.home };
+    for (const x of out) {
+      const sp = SPOT[x.id];
+      x.drive = at.isCamp ? x.min : driveMin(at.pt, sp); x.driveFrom = at.name;
+      at = { name: short(sp.name), pt: sp };
+    }
+    const toCamp = out.length ? (pm ? pm.min : driveMin(at.pt, c)) : null, toCampFrom = out.length ? at.name : null;
+    days.push({ day: d, who: d < TRIP.meet ? "You + Seb" : "All four", forecast: !!resFor[d], sessions: out, notes, camp: c, power: k === 0, toCamp, toCampFrom,
       drive: k === 0 ? home[route[k]] : D[route[k - 1]][route[k]], from: k === 0 ? TRIP.home.name : null });
   });
   // last day: morning session, then the van back by 2pm
@@ -196,7 +205,7 @@ export function makePlan(dayResults) {
   const am = fresh(sessions(last.near, resFor[TRIP.end], MORNING, 35), K - 1)[0];
   const leaveMin = Math.floor((TRIP.dropOff * 60 - backMin - 20) / 15) * 15, lh = Math.floor(leaveMin / 60), lm = leaveMin % 60;
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
-  days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am }] : [],
+  days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am, drive: am.min, driveFrom: "camp" }] : [],
     notes: [`Leave by ${leave} — van back in Bankstown at 2pm (~${Math.round(backMin / 6) / 10} h).`] });
   return { days, covered, skipped, why: explain(route.map(i => camps[i]), resFor, sideOf, skipped) };
 }

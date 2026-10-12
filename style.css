@@ -486,3 +486,6 @@ body { text-shadow: none; }
 .infocard .tips { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 3px; font-size: .82rem; color: var(--ink); }
 .hcard.whycard { display: block; cursor: default; padding: 12px 14px; }
 .whycard ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: .86rem; }
+.nstag { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 6px; font: 800 .62rem var(--body); vertical-align: 2px; margin-left: 4px; color: #08263f; }
+.nstag.n { background: #7fd8f2; }
+.nstag.s { background: #f2cc3d; }
