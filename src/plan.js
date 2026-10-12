@@ -27,24 +27,42 @@ const MORNING = ["Dawn", "Morning"], ARVO = ["Midday", "Arvo", "Evening"];
 
 const dayHas = (dayResults, day) => { try { const r = dayResults(day); return r && Object.values(r).some(Boolean); } catch (e) { return false; } };
 
-function win(r, labels) {
+// The plan leans on the actual conditions more than the overall rating (Jacob: "base it a lot more on rain and wind"):
+// a session's value = half its rating + a wind term (clean vs onshore) + a rain term (recent rain, full for dives, half for surf).
+const angD = (a, b) => Math.abs(((((a - b) % 360) + 540) % 360) - 180);
+function conditions(s, rep) {
+  const c = rep?.ctx; if (!c) return 0;
+  const facing = s.type === "spear" ? (s.sides?.find(x => x.name === rep.side) || s.sides?.[0])?.facing ?? 90 : s.facing;
+  const off = angD(c.wdir, facing + 180), kn = c.wspd;
+  // wind: light or blowing off the land = clean; onshore costs more the harder it blows
+  const wind = kn < 5 ? 2 : off <= 45 ? 2 : off <= 70 ? 1.2 : off <= 110 ? -0.3 * Math.min(2, kn / 8) : off <= 135 ? -1 * Math.min(2, kn / 8) : -1.6 * Math.min(2, kn / 8);
+  // rain: the runoff still in the water (fades over days, longer near big rivers) + the last day's rain;
+  // dives take it fully, surf half
+  const river = s.spear?.river, half = !river ? 1 : { large: 1.6, med: 1.3, small: 1.1 }[river.size] ?? 1.2;
+  const rain = -(Math.min(4.5, (c.runoff || 0) * half / 5) + Math.min(2, (c.rain24 || 0) / 8)) * (s.type === "spear" ? 1 : 0.5);
+  return wind + rain;
+}
+function win(r, labels, s) {
   const ws = r?.windows.filter(w => labels.includes(w.label) && w.score != null) || [];
   if (!ws.length) return null;
-  const best = ws.reduce((a, b) => ((a.no ? -1 : a.score) >= (b.no ? -1 : b.score) ? a : b));
-  return { score: best.no ? 0 : best.score, no: best.no, label: best.label, ft: best.rep?.ft };
+  const val = w => (w.no ? -99 : 0.5 * w.score + conditions(s, w.rep));
+  const best = ws.reduce((a, b) => (val(a) >= val(b) ? a : b));
+  return { score: best.no ? 0 : best.score, no: best.no, label: best.label, ft: best.rep?.ft, cond: best.no ? 0 : conditions(s, best.rep) };
 }
 // base quality, used before the forecast reaches a day
 const usual = s => (s.type === "spear" ? 5 + (s.spear?.kingfish ?? 0) : 6 + 2 * (s.surf?.quality ?? 0));
-
-// sessions near a camp for a day, best first: { id, name, type, easy, min, score, no, label, forecast, v }
-function sessions(near, res, labels, max) {
+// past the forecast, the spots' reputations are squashed together (they mustn't decide north vs south), and the rain
+// that's already fallen is carried forward: carry[id] = that spot's runoff penalty on this day, fading at its own rate
+function sessions(near, res, labels, max, carry) {
   const out = [];
   for (const [id, m] of near) {
     const s = SPOT[id]; if (!s || m > max) continue;
-    const w = res ? win(res[id], labels) : null;
+    const w = res ? win(res[id], labels, s) : null;
     if (res && !w) continue;
     const score = w ? w.score : usual(s);
-    const v = (w?.no ? -5 : score) - m / 30 + (s.type === "spear" ? SPEAR_BONUS : 0);
+    // forecast days: half the rating + rain/wind conditions; beyond the forecast: squashed reputation + rain carried forward
+    const base = w ? (w.no ? -5 : 0.5 * score + w.cond + 2.5) : 6.5 + 0.35 * (score - 6.5) + (carry?.[id] || 0);
+    const v = base - m / 30 + (s.type === "spear" ? SPEAR_BONUS : 0);
     out.push({ id, name: s.name, type: s.type, easy: s.easy, min: m, score, no: w?.no, label: w?.label, forecast: !!res, v });
   }
   return out.sort((a, b) => b.v - a.v);
@@ -65,13 +83,31 @@ const nextDay = d => (d === NIGHTS[NIGHTS.length - 1] ? TRIP.end : NIGHTS[NIGHTS
 export function makePlan(dayResults) {
   const resFor = {};
   for (const d of [...NIGHTS, TRIP.end]) resFor[d] = dayHas(dayResults, d) ? dayResults(d) : null;
+  // the latest forecast day we have (often before the trip starts): its runoff, faded forward, for the days beyond it
+  let lastDay = null;
+  for (let t = Date.parse(TRIP.end + "T12:00:00Z"); t > Date.parse(TRIP.start + "T12:00:00Z") - 14 * 864e5; t -= 864e5) {
+    const d = new Date(t).toISOString().slice(0, 10); if (dayHas(dayResults, d)) { lastDay = d; break; }
+  }
+  const lastRes = lastDay ? dayResults(lastDay) : null;
+  const carryFor = {};
+  for (const d of [...NIGHTS, TRIP.end]) {
+    if (resFor[d] || !lastRes) continue;
+    const gapH = (Date.parse(d) - Date.parse(lastDay)) / 36e5, map = {};
+    for (const sp of SPOTS) {
+      const c = lastRes[sp.id]?.best?.rep?.ctx; if (!c) continue;
+      const rv = sp.spear?.river, halfH = !rv ? 30 : { large: 120, med: 72, small: 48 }[rv.size] ?? 60;
+      const left = (c.runoff || 0) * 0.5 ** (gapH / halfH), k = !rv ? 1 : { large: 1.6, med: 1.3, small: 1.1 }[rv.size] ?? 1.2;
+      map[sp.id] = -Math.min(4.5, left * k / 5) * (sp.type === "spear" ? 1 : 0.5);
+    }
+    carryFor[d] = map;
+  }
   const camps = CAMPS.filter(c => c.near.some(([, m]) => m <= 35));
   const n = camps.length, K = NIGHTS.length;
 
   // sessions around each camp each night: the arvo near it, and the next morning near it (surf / dive lists, best first)
   const split = l => ({ surf: l.filter(x => x.type === "surf"), spear: l.filter(x => x.type === "spear") });
-  const AR = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[d], ARVO, 45))));
-  const MO = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[nextDay(d)], MORNING, 35))));
+  const AR = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[d], ARVO, 45, carryFor[d]))));
+  const MO = NIGHTS.map(d => camps.map(c => split(sessions(c.near, resFor[nextDay(d)], MORNING, 35, carryFor[nextDay(d)]))));
   const bonus = camps.map(c => KBONUS[c.kind] - (c.dirt ? 0.8 : 0));
   // value of a block (surf + dive average; a missing one costs 3) skipping spots already done at earlier stops
   // P = spots already done at this stop: redoing one costs 2.5, so stops with a few good spots win
@@ -182,7 +218,7 @@ export function makePlan(dayResults) {
     const c = camps[route[k]], prev = k ? camps[route[k - 1]] : null;
     if (resFor[d]) covered++;
     const out = [], notes = [];
-    const pick = pickDay(prev ? fresh(sessions(prev.near, resFor[d], MORNING, 35), k - 1) : [], fresh(sessions(c.near, resFor[d], ARVO, 45), k));
+    const pick = pickDay(prev ? fresh(sessions(prev.near, resFor[d], MORNING, 35, carryFor[d]), k - 1) : [], fresh(sessions(c.near, resFor[d], ARVO, 45, carryFor[d]), k));
     const am = prev && use(pick.am, k - 1);
     if (am) out.push({ when: "Morning", ...am });
     if (k === 0) notes.push("Pick up the van in Bankstown at 9am.");
@@ -202,7 +238,7 @@ export function makePlan(dayResults) {
   });
   // last day: morning session, then the van back by 2pm
   const last = camps[route[K - 1]], backMin = home[route[K - 1]];
-  const am = fresh(sessions(last.near, resFor[TRIP.end], MORNING, 35), K - 1)[0];
+  const am = fresh(sessions(last.near, resFor[TRIP.end], MORNING, 35, carryFor[TRIP.end]), K - 1)[0];
   const leaveMin = Math.floor((TRIP.dropOff * 60 - backMin - 20) / 15) * 15, lh = Math.floor(leaveMin / 60), lm = leaveMin % 60;
   const leave = `${lh % 12 || 12}${lm ? ":" + String(lm).padStart(2, "0") : ""}${lh >= 12 ? "pm" : "am"}`;
   days.push({ day: TRIP.end, who: "All four", forecast: !!resFor[TRIP.end], sessions: am ? [{ when: "Morning", ...am, drive: am.min, driveFrom: "camp" }] : [],
@@ -233,7 +269,7 @@ function explain(stops, resFor, sideOf, skipped) {
         for (const [sp, r] of top) {
           sc.push(r.best.score);
           const c = r.best.rep?.ctx; if (!c) continue;
-          rain.push(c.rain72);
+          rain.push(c.runoff);
           const facing = sp.facing ?? sp.sides?.[0]?.facing ?? 90, off = Math.abs((((c.wdir - (facing + 180)) % 360) + 540) % 360 - 180);
           clean.push(c.wspd < 5 || off <= 70 ? 1 : 0); // light, offshore or cross-offshore
         }
@@ -243,7 +279,7 @@ function explain(stops, resFor, sideOf, skipped) {
     };
     const a = stat(startSide), b = stat(otherSide), span = early.length > 1 ? `${dshort(early[0])}–${dshort(early[early.length - 1])}` : dshort(early[0]);
     const r = [];
-    if (a.rain != null && b.rain != null && a.rain < b.rain - 3) r.push(`to get away from the rain — ~${Math.round(a.rain)} mm in the 3 days before vs ~${Math.round(b.rain)} mm ${otherSide}`);
+    if (a.rain != null && b.rain != null && a.rain < b.rain * 0.7 - 1) r.push(`to get away from the rain — less runoff still in the water (${Math.round(a.rain)} vs ${Math.round(b.rain)} ${otherSide}, recent rain weighted by how fresh and heavy)`);
     if (a.clean != null && b.clean != null && a.clean > b.clean + 0.15) r.push(`for cleaner winds — offshore or light ${Math.round(a.clean * 100)}% of the time vs ${Math.round(b.clean * 100)}% ${otherSide}`);
     if (a.sc != null && b.sc != null && a.sc > b.sc + 0.2) r.push(`because the surf and dives rate higher there — ${a.sc.toFixed(1)}/10 vs ${b.sc.toFixed(1)} ${otherSide}`);
     if (r.length) why.push(`${start} ${r.join("; and ")} (${span}).`);
