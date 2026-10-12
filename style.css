@@ -461,3 +461,8 @@ body { text-shadow: none; }
 .gorow .go { display: grid; place-items: center; align-content: center; text-align: center; text-decoration: none; min-height: 48px; }
 .go.sl { background: rgba(255,255,255,.12); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.2); }
 .go.sl small { display: block; font-size: .66rem; font-weight: 500; color: var(--muted); }
+/* spot table is now time + rating bar + wind (swell → Surfline button) */
+.st.windonly .st-head, .st.windonly .st-row { grid-template-columns: 90px 1fr; }
+.st.windonly .st-wind { display: grid; grid-template-columns: 22px auto 1fr; align-items: center; justify-items: start; gap: 8px; padding: 8px 12px; text-align: left; }
+.st.windonly .st-wind .wd { justify-self: end; }
+.st.windonly .st-head span:last-child { text-align: left; padding-left: 12px; }

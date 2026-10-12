@@ -1,5 +1,5 @@
 // Small SVG charts for the spot sheet: tide curve, and swell + wind through the day.
-import { fmtTime, hourCtx, hSpotAt, angDiff, card, tideFor, tideEventsFor } from "./score.js";
+import { fmtTime, hourCtx, angDiff, card, tideFor, tideEventsFor } from "./score.js";
 
 const W = 320;
 const hourLabel = h => (h === 12 ? "12pm" : h < 12 ? h + "am" : h - 12 + "pm");
@@ -57,35 +57,25 @@ export function tideGraph(spot, fc, day, win) {
 // scoreAt(i) scores that exact forecast hour; colourOf(score, no) gives the rating colour.
 export function surfTable(spot, fc, day, side, scoreAt, colourOf) {
   const facing = side ? side.facing : spot.facing;
-  const shelter = side ? side.shelterSwell : spot.shelterSwell;
   const idx = fc.time.findIndex(t => t.startsWith(day));
   if (idx < 0) return "";
-  const isSurf = spot.type === "surf";
-  const range = v => { const lo = Math.max(0, Math.floor(v)), hi = Math.max(1, Math.ceil(v)); return lo === hi ? `${hi}` : `${lo}-${hi}`; }; // same as the headline
   const label = h => (h === 0 ? "12am" : h === 12 ? "Noon" : h < 12 ? h + "am" : h - 12 + "pm");
   const nowH = new Date(Date.now() + 11 * 36e5).toISOString().slice(0, 13); // AEDT
   let rows = "";
   for (let h = 3; h <= 21; h += 3) {
     const i = idx + h; if (fc.hs[i] == null) continue;
     const c = hourCtx(spot, fc, i);
-    const at = hSpotAt(facing, shelter, c.parts) * 3.28 * (isSurf ? 0.6 + 0.04 * (c.dom.T || 8) : 1);
     const sc = scoreAt(i);
     const lit = !sc ? 0 : sc.no ? 1 : sc.score < 2 ? 1 : sc.score < 4 ? 2 : sc.score < 6 ? 3 : sc.score < 8 ? 4 : 5; // 5 levels, same bands as the badges
     const col = sc ? colourOf(sc.score, sc.no) : "var(--line)";
     const bar = [1, 2, 3, 4, 5].map(k => `<i style="background:${k <= lit ? col : "var(--line)"}"></i>`).join("");
     const wrel = windRel(facing, c.wdir, c.wspd), wc = relColour(wrel);
-    const dom = c.dom, swFt = (dom.h || c.hs) * 3.28;
     const now = fc.time[i].slice(0, 13) <= nowH && nowH < (fc.time[i + 3] || "").slice(0, 13);
     rows += `<div class="st-row${now ? " now" : ""}"><span class="st-t">${label(h)}<span class="st-bar" aria-label="${sc ? (sc.no ? "unsafe" : sc.score.toFixed(1) + " out of 10") : "no data"}">${bar}</span></span>`
-      + `<span class="st-surf">${range(at)}</span>`
-      + (dom.h > 0 && dom.T > 0
-        ? `<span class="st-sw"><b>${swFt.toFixed(1)}<small>ft</small></b><b>${Math.round(dom.T)}<small>s</small></b>`
-          + `<span class="st-dir"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(dom.d + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--ink)"/></g></svg><small>${Math.round(dom.d)}°</small></span></span>`
-        : `<span class="st-sw"><b>–</b><b></b><span class="st-dir"><small>no data</small></span></span>`)
       + `<span class="st-wind" style="--wc:${wc}" aria-label="Wind ${card(c.wdir)} ${mph(c.wspd)} mph, ${wrel}"><svg viewBox="-8 -8 16 16" width="18" height="18" aria-hidden="true"><g transform="rotate(${(c.wdir + 180) % 360})"><path d="M0,-6.5 L4.5,5 L0,2.5 L-4.5,5 Z" fill="var(--wc)"/></g></svg><b>${mph(c.wspd)}<small>mph</small></b><small class="wd">${card(c.wdir)}</small></span></div>`;
   }
   if (!rows) return "";
-  return `<div class="st"><div class="st-head"><span></span><span>${isSurf ? "Surf (ft)" : "Swell at entry (ft)"}</span><span>Primary swell</span><span>Wind</span></div>${rows}</div>`;
+  return `<div class="st windonly"><div class="st-head"><span></span><span>Wind</span></div>${rows}</div>`;
 }
 
 // Touch-and-drag (or hover) along the tide chart to read the time and height at that point.
