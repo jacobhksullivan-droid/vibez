@@ -14,7 +14,7 @@ export function renderOutlook(ctx) {
       const res = dayResults(d);
       const best = type => {
         let m = null;
-        for (const s of SPOTS) if (s.region === reg && s.type === type) { const r = res[s.id]; if (r && (m == null || r.score > m)) m = r.score; }
+        for (const s of SPOTS) if (s.region === reg && s.type === type && !s.snorkelOnly) { const r = res[s.id]; if (r && (m == null || r.score > m)) m = r.score; }
         return m;
       };
       grid[reg][d] = { surf: best("surf"), spear: best("spear") };

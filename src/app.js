@@ -9,7 +9,7 @@ import { savedOrigin, saveOrigin, driveTimes, fmtDrive } from "./location.js";
 import { loadBuoys, cachedBuoys } from "./buoys.js";
 import { renderHome } from "./home.js";
 import { rankCamps, campsNear, KIND, facilities, CAMPS, DUMPS } from "./camps.js";
-import { makePlan } from "./plan.js";
+import { makePlan, TRIP as PLAN_TRIP } from "./plan.js";
 import { renderOutlook, regionBounds } from "./outlook.js";
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -100,7 +100,7 @@ function noTakeZoneAt(lat, lon) {
 }
 
 // ---------- map ----------
-let map, markers = {}, meMarker, sharkLayer, campLayer, parkLayer, dumpLayer, fitted = false;
+let map, layersCtl, markers = {}, meMarker, sharkLayer, campLayer, parkLayer, dumpLayer, fitted = false;
 function initMap() {
   map = L.map("map", { zoomControl: false, attributionControl: true }).setView([-33.6, 151.4], 6);
   L.control.zoom({ position: "topright" }).addTo(map);
@@ -114,7 +114,7 @@ function initMap() {
   // camp icons only once zoomed in (they'd bury the spot pins on the whole-coast view)
   const zoomCls = () => $("#map").classList.toggle("far", map.getZoom() < 10);
   map.on("zoomend", zoomCls); zoomCls();
-  L.control.layers({ Satellite: satellite, Map: street }, { "Sharks (48 h)": sharkLayer, "Free / cheap camps": campLayer, "Caravan parks": parkLayer, "Dump points": dumpLayer }, { position: "topright" }).addTo(map);
+  layersCtl = L.control.layers({ Satellite: satellite, Map: street }, { "Sharks (48 h)": sharkLayer, "Free / cheap camps": campLayer, "Caravan parks": parkLayer, "Dump points": dumpLayer }, { position: "topright" }).addTo(map);
   for (const s of SPOTS) {
     const m = L.marker([s.lat, s.lon], { icon: pinIcon(s, null), riseOnHover: true, title: s.name, keyboard: true });
     m.on("click", () => openSheet(s.id));
@@ -168,7 +168,7 @@ function pinIcon(s, r, dim) {
 function drawZones() {
   if (!state.zones || !map) return;
   L.geoJSON(state.zones, {
-    filter: f => f.properties.spear === "no",
+    filter: f => f.properties.spear === "no" && f.properties.water !== "estuary", // ocean / marine-bay no-take zones only
     style: { color: "#c0392b", weight: 1, fillColor: "#c0392b", fillOpacity: 0.25 },
     onEachFeature: (f, l) => l.bindPopup(`<b>${esc(f.properties.name)}</b><br>No-take zone: no spearfishing.<br><a href="https://www.dpi.nsw.gov.au/fishing/marine-protected-areas" target="_blank" rel="noopener">Official maps</a>`),
   }).addTo(map);
@@ -288,30 +288,84 @@ function rainStrip(fc, day) {
 }
 
 // ---------- trip plan ----------
+// the plan is worked out once per forecast refresh (it takes a couple of seconds) and shared by the Plan tab and the map
+let planCache = { data: null, plan: null };
+function getPlan() {
+  if (planCache.data !== state.data || !planCache.plan) planCache = { data: state.data, plan: makePlan(dayResults) };
+  return planCache.plan;
+}
+const spotIcon = s => (s.snorkelOnly ? "🤿" : TYPE_ICON[s.type]);
 function renderPlan() {
   if (!state.data) { $("#plan").innerHTML = `<p class="note">Loading forecast…</p>`; return; }
-  const P = makePlan(dayResults);
+  // first time after a refresh: show a holding line, then work the plan out once the screen has painted
+  if (planCache.data !== state.data || !planCache.plan) {
+    $("#plan").innerHTML = `<p class="note">Working out the plan…</p>`;
+    setTimeout(() => { getPlan(); if (state.view === "planView") renderPlan(); }, 30);
+    return;
+  }
+  const P = getPlan();
   const dname = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
   const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
   // north / south of Sydney tag
   const nsTag = lat => (lat > -33.6 ? `<span class="nstag n">N</span>` : lat < -34.0 ? `<span class="nstag s">S</span>` : "");
   const leg = (m, from) => (m == null ? "" : m < 3 ? `right at ${esc(from)}` : `${mins(m)} drive from ${esc(from)}`);
-  const sess = (x, day) => `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
+  const TIERS = [["✗", "fails", "t0"], ["~", "marginal", "t1"], ["✓", "passes", "t2"]];
+  const tierChip = x => { const t = TIERS[x.tier ?? 1]; return `<span class="tierchip ${t[2]}">${t[0]} ${t[1]}</span>`; };
+  const sess = (x, day) => {
+    const s = SPOTS.find(sp => sp.id === x.id), v = x.vd;
+    return `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
-      <span>${TYPE_ICON[x.type]} <b>${esc(x.name)}</b> ${nsTag(SPOTS.find(sp => sp.id === x.id)?.lat ?? 0)}<small>${leg(x.drive ?? x.min, x.driveFrom || "camp")}</small></span></button>`;
-  const days = P.days.map(e => {
-    const am = e.sessions.filter(x => x.when === "Morning"), pm = e.sessions.filter(x => x.when !== "Morning");
-    const legStart = e.day === "2026-10-26" ? `<h3 class="pleg">The others join · 26–31 Oct</h3>` : "";
-    return `${legStart}<article class="pday ${e.who === "You + Seb" ? "core" : "social"}">
-      <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>rough · forecast not out yet</em>`}</header>
-      ${am.map(x => sess(x, e.day)).join("")}
-      ${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
-      ${pm.map(x => sess(x, e.day)).join("")}
+      <span>${spotIcon(s)} <b>${esc(x.name)}</b> ${nsTag(s.lat)}${s.snorkelOnly ? ` <span class="tierchip t1">snorkel only · no-take</span>` : ""}<small>${leg(x.drive ?? x.min, x.driveFrom || "camp")}</small>
+      ${v ? `<small class="praw">${esc(v.raw)}</small><small class="pverd">${tierChip(x)} ${esc(v.line.replace(/^faces \w+ · /, ""))}${v.why && x.tier < 2 ? ` — <em>${esc(v.why)}</em>` : ""}</small>` : ""}</span></button>`;
+  };
+  const cand = (o, day) => `<button class="psess cand" type="button" data-open="${o.id}" data-day="${day}"><span>${spotIcon(SPOTS.find(sp => sp.id === o.id))} <b>${esc(o.name)}</b><small>faces ${esc(o.facing)}</small></span></button>`;
+  const firmsUp = d => dname(new Date(Date.parse(d + "T12:00:00") - 9 * 864e5).toISOString().slice(0, 10));
+  const days = P.days.map((e, k) => {
+    const am = e.sessions.filter(x => x.when !== "Arvo"), pm = e.sessions.filter(x => x.when === "Arvo");
+    const note = n => `<p class="pnote">${esc(n)}</p>`, pre = e.notes.filter(n => n.startsWith("Pick up")), post = e.notes.filter(n => !n.startsWith("Pick up"));
+    const body = e.forecast ? `${pre.map(note).join("")}${am.map(x => sess(x, e.day)).join("")}${pm.map(x => sess(x, e.day)).join("")}${post.map(note).join("")}`
+      : `${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
+        <p class="pnote prov">Somewhere around <b>${esc(e.region)}</b>. Typical late-Oct pattern: S–SE swell, light westerly mornings, NE sea breeze most arvos → dive the north-facing side of a headland (out of the S swell), surf early before the NE gets up.</p>
+        <div class="cands">${(e.cands || []).map(o => cand(o, e.day)).join("")}</div>`;
+    const why = e.forecast
+      ? `${e.brief ? `<p>${esc(e.brief)}</p>` : ""}
+         ${e.sessions.filter(x => x.vd).map(x => `<p><b>${esc(x.name.split(/[(—,]/)[0].trim())}</b>: ${esc(x.vd.line)}.</p>`).join("")}
+         ${(e.alts || []).length ? `<p><b>Lost out:</b> ${e.alts.map(a => `${esc(a.name.split(/[(—,]/)[0].trim())} (${fmtScore(a.score)}) — ${esc(a.why)}`).join("; ")}.</p>` : ""}
+         ${e.fallback ? `<p><b>If it's worse than forecast:</b> ${esc(e.fallback.name)} faces ${esc(e.fallback.facing)} — a different aspect for the dive${e.fallback.snorkelOnly ? " (snorkel only)" : ""}.</p>` : ""}`
+      : `<p><b>Provisional</b> — no forecast for this day yet; it firms up around ${firmsUp(e.day)}. The candidates face different ways so one should suit whatever turns up; a southerly change, an E–NE swell or a lot of rain would move the plan.</p>`;
+    return `<article class="pday${e.back ? " backday" : ""}" id="pd-${e.day}">
+      <header><b>${dname(e.day)}</b>${e.forecast ? "" : `<em>provisional</em>`}<button class="mapbtn" type="button" data-planmap="${e.day}">Map ›</button></header>
+      ${e.back ? `<p class="pback">↩ ${esc(e.back.text)}</p>` : ""}
+      ${body}
       ${e.camp ? `<a class="pcamp" href="${dirUrl(e.camp.lat, e.camp.lon)}" target="_blank" rel="noopener"><span>🌙 <b>${esc(e.camp.name)}</b> ${nsTag(e.camp.lat)}</span><small>${KIND[e.camp.kind].icon} ${esc(KIND[e.camp.kind].cost.split(" · ")[0])} · ${e.toCamp != null ? leg(e.toCamp, e.toCampFrom) : e.drive ? `${mins(e.drive)} drive from ${esc(e.from || "last camp")}` : "same camp"}${e.camp.dirt ? " · ⚠ dirt access" : ""}</small>${e.power ? `<small>🔌 Powered site — charge the van. Book ahead.</small>` : ""}</a>` : ""}
+      <details class="pwhy"><summary>Why this day</summary>${why}</details>
     </article>`;
   }).join("");
-  $("#plan").innerHTML = `<section class="hsec"><h2>North or south first?</h2>
-    <div class="hcard whycard"><ul>${(P.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul></div></section>${days}`;
+  $("#plan").innerHTML = `<section class="hsec"><h2>Why this plan</h2>
+    <div class="hcard whycard"><ul>${(P.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul>
+    <button class="mapbtn" type="button" data-planmap="all">Whole route on the map ›</button></div></section>${days}`;
+}
+// the plan drawn on the map: Bankstown → each day's spots → camp … → Bankstown, numbered by night; backtracks dashed
+let planLayer = null;
+function drawPlanRoute(focusDay) {
+  if (!map) return;
+  const P = getPlan(); if (!P?.days?.length) return;
+  if (!planLayer) { planLayer = L.layerGroup(); layersCtl.addOverlay(planLayer, "Trip plan route"); }
+  planLayer.clearLayers(); if (!map.hasLayer(planLayer)) planLayer.addTo(map);
+  const H = [PLAN_TRIP.home.lat, PLAN_TRIP.home.lon];
+  let at = H; const focus = [];
+  P.days.forEach((e, k) => {
+    const pts = [at, ...e.sessions.map(x => { const s = SPOTS.find(sp => sp.id === x.id); return [s.lat, s.lon]; })];
+    if (e.camp) pts.push([e.camp.lat, e.camp.lon]); else pts.push(H);
+    const on = focusDay === "all" || focusDay === e.day;
+    L.polyline(pts, { color: e.back ? "#ff9f43" : k % 2 ? "#5fd3ff" : "#ffd166", weight: on ? 4 : 2, opacity: on ? 0.95 : 0.4, dashArray: e.back ? "6 6" : null }).addTo(planLayer);
+    if (e.camp) L.marker([e.camp.lat, e.camp.lon], { icon: L.divIcon({ className: "cc", html: `<div class="daypin${on ? " on" : ""}">${+e.day.slice(8)}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] }), title: `Night of ${e.day.slice(8)} Oct: ${e.camp.name}`, zIndexOffset: on ? 4000 : 3000 })
+      .bindPopup(`<b>Night ${k + 1} · ${+e.day.slice(8)} Oct</b><br>${esc(e.camp.name)}<br>${e.sessions.map(x => `${x.when}: ${esc(x.name)}`).join("<br>")}`).addTo(planLayer);
+    if (focusDay === e.day) focus.push(...pts.slice(1));
+    at = e.camp ? [e.camp.lat, e.camp.lon] : H;
+  });
+  if (focusDay === "all") map.fitBounds(L.latLngBounds(P.days.flatMap(e => (e.camp ? [[e.camp.lat, e.camp.lon]] : [])).concat([H])).pad(0.1));
+  else if (focus.length) map.fitBounds(L.latLngBounds(focus).pad(0.35), { maxZoom: 12 });
 }
 
 // ---------- spot sheet ----------
@@ -369,17 +423,17 @@ function openSheet(id, winLabel) {
   // Spot info: the key facts and the handful of local tips that matter, short and always visible
   const short = t => { const x = String(t || "").replace(/^(Local( rule)?|Generic rule)\s*:\s*/i, "").trim(); const m = x.match(/^.{20,140}?[.;!](\s|$)/); return (m ? m[0] : x.length > 140 ? x.slice(0, 137) + "…" : x).trim().replace(/[;,]$/, ""); };
   const keyFacts = s.type === "spear"
-    ? [["Entry", s.spear.entry], ["Depth", `${s.depth[0]}–${s.depth[1]} m`], ["Kingfish", "●".repeat(s.spear.kingfish) + "○".repeat(3 - s.spear.kingfish)], ["Fish", s.spear.species.slice(0, 5).join(", ")], ["Watch", s.hazards]]
+    ? [["Entry", s.spear.entry], ["Depth", `${s.depth[0]}–${s.depth[1]} m`], ...(s.snorkelOnly ? [] : [["Kingfish", "●".repeat(s.spear.kingfish) + "○".repeat(3 - s.spear.kingfish)]]), ["Fish", s.spear.species.slice(0, 5).join(", ")], ["Watch", s.hazards]]
     : [["Break", s.terrain], ["Watch", s.hazards]];
   const tips = [...new Set([...(s.rules || []).map(r => short(r.why)), ...(s.intel || []).map(i => short(i.text))])].filter(Boolean).slice(0, 4);
   const infoCard = `<section class="infocard"><dl class="kv">${keyFacts.map(([k, v]) => `<dt>${k}</dt><dd>${esc(short(v))}</dd>`).join("")}</dl>${tips.length ? `<ul class="tips">${tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</section>`;
 
   $("#sheetBody").innerHTML = `
     <div class="sh-head"><span class="badge" style="--c:${colour(win.score, win.no)}">${fmtScore(win.score, win.no)}</span>
-      <div><h2>${esc(s.name)}</h2><small><span class="typechip ${s.type}">${TYPE_ICON[s.type]} ${s.type === "surf" ? "Surf" : "Spear"}</span>${PARTNER[id].length ? `<span class="typechip both">+ ${PARTNER[id][0].type === "surf" ? "surf" : "spear"} here too</span>` : ""} ${dayName}${r.conf !== "high" ? ` · ${r.conf} confidence` : ""}</small></div></div>
+      <div><h2>${esc(s.name)}</h2><small><span class="typechip ${s.type}">${spotIcon(s)} ${s.type === "surf" ? "Surf" : s.snorkelOnly ? "Snorkel" : "Spear"}</span>${PARTNER[id].length ? `<span class="typechip both">+ ${PARTNER[id][0].type === "surf" ? "surf" : "spear"} here too</span>` : ""} ${dayName}${r.conf !== "high" ? ` · ${r.conf} confidence` : ""}</small></div></div>
     ${infoCard}
     ${PARTNER[id].map(o => `<button class="partner" type="button" data-open="${o.id}">${TYPE_ICON[o.type]} ${o.type === "surf" ? "Surf" : "Spear"} here too: <b>${esc(o.name)}</b> <span class="badge" style="--c:${colour(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}">${fmtScore(dayResults(state.day)[o.id]?.best?.score, dayResults(state.day)[o.id]?.best?.no)}</span> ›</button>`).join("")}
-    ${legal ? `<p class="warn">No spearing: inside ${esc(legal)}</p>` : ""}
+    ${s.snorkelOnly ? `<p class="warn">🤿 Snorkel / freedive only — no-take aquatic reserve, no spearing.</p>` : legal ? `<p class="warn">No spearing: inside ${esc(legal)}</p>` : ""}
     ${win.no ? `<p class="no">${esc(win.no)}</p>` : ""}
     ${best}${sharks}
     ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<span><small>${k}</small>${esc(v)}</span>`).join("")}</div>` : ""}
@@ -484,6 +538,12 @@ document.addEventListener("click", async e => {
     state.day = b.dataset.goday;
     showView("mapView");
     setTimeout(() => map.fitBounds(L.latLngBounds(regionBounds(b.dataset.goregion)).pad(0.4)), 50);
+  }
+  else if (b.dataset.planmap) {
+    const d = b.dataset.planmap;
+    if (d !== "all" && state.days.includes(d)) state.day = d;
+    fitted = true; showView("mapView");
+    setTimeout(() => drawPlanRoute(d), 60);
   }
   else if (b.dataset.day) { state.day = b.dataset.day; renderAll(); }
   else if (b.dataset.mode) { state.mode = b.dataset.mode; b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderAll(); }

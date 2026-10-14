@@ -46,7 +46,7 @@ export function rankCamps(day, dayResults, opts = {}) {
       const v = sc - m / 30; // 30 min of driving costs a point
       const cur = { id, name: s.name, score: sc, min: m, v };
       if (s.type === "surf") { if (!bestSurf || v > bestSurf.v) bestSurf = cur; }
-      else if (!bestSpear || v > bestSpear.v) bestSpear = cur;
+      else if (!s.snorkelOnly && (!bestSpear || v > bestSpear.v)) bestSpear = cur; // no-take snorkel spots aren't spearing
     }
     if (!bestSurf && !bestSpear) continue;
     if (opts.maxDrive != null && reach != null && reach > opts.maxDrive) continue;

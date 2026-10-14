@@ -147,3 +147,27 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
 - Plan tab header = "North or south first?" — `explain()` in plan.js: where it starts (far south / south coast / Illawarra / Central Coast-Newcastle / mid north / far north, + nearest spot) and why, only stating what's true for the first forecast days: escaping rain (rain72), cleaner winds (% of top spots light/offshore/cross-off), higher ratings; else 'both coasts about the same'. Before the forecast reaches the trip: 'going on usual quality for now'.
 - Plan cards: N / S tag (north of -33.6 / south of -34.0) on every spot and camp; each session shows the drive leg from the previous stop (camp/Bankstown → morning spot → arvo spot), camp row shows the drive from the arvo spot. Spot→spot legs use the rough `driveMin` estimate; camp↔spot legs use OSRM times.
 - Plan weighting (12 Oct night): on forecast days a session's value = ½ rating + `conditions()` (wind: light/offshore +2, cross-off +1.2, cross/onshore up to −3.2 by strength; rain: decayed runoff ×river factor + last-24 h rain, full for dives, half for surf) + 2.5. Past the forecast, reputations are squashed (6.5 + 0.35×(usual−6.5)) and the last forecast day's runoff is carried forward, fading at each spot's half-life — so known rain still counts and reputations can't pick north vs south.
+
+## 19. Plan tab rework (14 Oct 2026) — conditions first
+- **Conditions gate** (`verdict()` in plan.js): every forecast session is pass / marginal / fail from the spot's aspect vs that window's swell + wind (+ vis for dives).
+  - Spear pass = swell at the entry ≤ ½·unsafeAt, wind sheltered (windShelter ≥ 0.6) or < 8 kn, vis good.
+  - Spear fail = unsafe, > 0.8·unsafeAt, exposed wind > 15 kn, or vis poor.
+  - Surf pass = 2 ft–maxSize at the spot, swell inside swellDir, offshore / < 6 kn / sheltered cross < 15 kn.
+  - Surf fail = < 1 ft, > maxSize+1, or onshore > 10 kn.
+  - `conf.shelter: "low"` = "aspect needs check": capped at marginal.
+  - Value = 6·tier + ½·score + wind/rain extra. Failing sessions are never picked; a day with no safe dive or surf says so.
+- **Routing:**
+  - Knobs in `CFG` at the top of plan.js: firstMax 300, lastMax 180, maxMove 240, backtrackMax 45, dayDetour 30, driveCost 1.5, bothSides 4.
+  - A leg = nights on one side of Sydney; at most 2. Each leg gets one free turnaround.
+  - Any other reversal is a backtrack: only when nothing ahead passes that night, the target passes, and it's ≤ backtrackMax. It's listed in the explainer.
+  - The search runs once heading south first and once north first; the better route wins. The explainer says if the other way was close.
+  - No Sydney/26th constraint (Jacob: go purely on conditions; north is a soft bonus).
+  - Within a day, morning + arvo spots can add at most dayDetour minutes over the camp→camp drive (no zigzags).
+  - Repeating a spot costs REPEAT = 8.
+- **Precision:** days the forecast covers get exact spots with raw inputs + verdict. Later days are provisional: region + the typical late-Oct pattern + 2–3 candidates facing different ways. They fill in as the forecast arrives.
+- **Explainers:** trip card (which way first and why, each leg's furthest point and why it stops there, driving hours per leg, last-night drive, backtracks). Each day has a "Why this day" section: swell/wind, verdicts, 2 alternatives that lost and why, a dive fallback facing another way.
+- **Map:**
+  - "Map ›" on each day (and "Whole route") draws the plan: numbered night pins, day segments, backtracks dashed. "Trip plan route" overlay in the layers control.
+  - No-take zones on the map are ocean/marine-bay only (`water: "estuary"` tagged in zones.geojson and hidden). Spot legal tags are unchanged (inside-only).
+- **New spot `bushrangers-bay`** (snorkelOnly, inside Bushrangers Bay Aquatic Reserve): shown as 🤿 "snorkel only · no-take", never in spear rankings (home/outlook/camps). It's offered as a day-1 on-the-way stop (+0.5) unless the later Bass Point day is better; same place as Bass Point (3 km rule).
+- The plan is computed once per forecast refresh (`getPlan()` cache in app.js, ~1–2.5 s), shared by Plan and Map.

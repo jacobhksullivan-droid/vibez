@@ -62,7 +62,7 @@ export function renderHome(ctx) {
   // near you first: within 2 h; widen to 4 h, then anywhere, if there aren't enough
   const within = (x, lim) => !drive?.minutes || drive.minutes[x.s.id] == null || drive.minutes[x.s.id] <= lim;
   const top = (list, type) => {
-    const all = list.filter(x => x.s.type === type).sort((a, b) => (b.w.no ? -1 : b.w.score) - (a.w.no ? -1 : a.w.score));
+    const all = list.filter(x => x.s.type === type && !x.s.snorkelOnly).sort((a, b) => (b.w.no ? -1 : b.w.score) - (a.w.no ? -1 : a.w.score));
     for (const lim of [120, 240, Infinity]) { const l = all.filter(x => within(x, lim)); if (l.length >= 2 || lim === Infinity) return l.slice(0, TOP); }
   };
   const block = (title, list, showWhen) => `

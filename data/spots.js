@@ -925,6 +925,33 @@ export const SPOTS = [
       { when: { windDir: [0, 60] }, then: { spear: -1.5 }, why: "NE wind blows straight into the north side of Bass Point.", src: "Generic rule applied to site layout" },
     ],
   },
+  {
+    // no-take aquatic reserve: snorkel / freedive only — never spearing (snorkelOnly drives the labels everywhere)
+    id: "bushrangers-bay", type: "spear", snorkelOnly: true, name: "Bushrangers Bay (Bass Point) — snorkel only", easy: "snorkel",
+    surfline: { url: "https://www.surfline.com/surf-report/redsands/584204204e65fad6a770941b", name: "Redsands" },
+    region: "Shoalhaven/Illawarra", lat: -34.5978, lon: 150.9015, tide: "A",
+    access: { lat: -34.5962, lon: 150.8990, note: "Bass Point Reserve car park at the end of Bass Point Tourist Rd; short walk down to the bay." },
+    overnight: "Killalea campground (next door, paid); Shellharbour Beachside holiday park.",
+    terrain: "Small bay near the tip of Bass Point: kelp-covered boulders and sand gutters, 2–12 m. Bushrangers Bay Aquatic Reserve — fish are protected, so they're everywhere (blue gropers, cuttlefish, rays).",
+    depth: [2, 12],
+    sides: [
+      { name: "Bushrangers Bay", facing: 30, shelterSwell: [[130, 240, 0.85]], shelterWind: [[140, 260, 0.85]] },
+    ],
+    spear: {
+      entry: "Walk down from the reserve car park; enter off the rocks or the small beach at the back of the bay. Snorkel / freedive only — no-take reserve, no spearing or collecting.",
+      unsafeAt: 1.2, kingfish: 0, kingfishNote: "No-take reserve — look, don't take.",
+      vis: "Often clear in southerlies.", species: ["blue groper", "cuttlefish", "rays", "wrasse", "nudibranchs"],
+      river: null,
+    },
+    hazards: "No-take aquatic reserve: no spearfishing, no collecting. Swell from the NE pushes straight in.",
+    intel: [
+      { text: "One of the Illawarra's best shore snorkels/dives: protected from southerly seas; the reserve means big friendly fish.", src: "Michael McFadyen's Scuba / NSW DPI — Bushrangers Bay Aquatic Reserve", url: "https://www.google.com/search?q=Bushrangers+Bay+Aquatic+Reserve+snorkel" },
+    ],
+    conf: { coords: "high", access: "high", legal: "high", shelter: "med", intel: "med" },
+    rules: [
+      { when: { windDir: [0, 70] }, then: { spear: -1.5 }, why: "NE wind blows into the bay.", src: "Generic rule applied to site layout" },
+    ],
+  },
 
   // ---------------- CENTRAL COAST / NEWCASTLE ----------------
   {
