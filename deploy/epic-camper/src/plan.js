@@ -35,12 +35,11 @@ const km = (a, b) => Math.hypot((a.lat - b.lat) * 111, (a.lon - b.lon) * 111 * M
 export const driveMin = (a, b) => { const d = km(a, b); return Math.round((d < 40 ? (d * 1.35) / 50 : (d * 1.25) / 80) * 60 * 1.15); };
 
 const KBONUS = { free: 0.5, rest: 0.5, npws: 0.3, camp: 0.3, park: 0 };
-const MORNING = ["Dawn", "Morning"], ARVO = ["Midday", "Arvo", "Evening"];
+const MORNING = ["Dawn", "Morning"], ARVO = ["Midday", "Arvo", "Evening"], ARVO_LATE = ["Arvo", "Evening"];
 const mph = kn => Math.round(kn * 1.151), ftR = m => Math.round(m * 3.28);
 const short = n => n.split(/[(—,]/)[0].trim();
 const dshort = d => new Date(d + "T12:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric" });
 const mins = m => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? " " + String(m % 60).padStart(2, "0") : ""}`);
-const TIER = ["fails", "marginal", "passes"];
 export const sideOf = c => (c.lat > -33.6 ? "N" : c.lat < -34.0 ? "S" : null);
 const SIDE = { N: "north", S: "south" };
 
@@ -57,7 +56,10 @@ function windWord(facing, dir, kn) {
 export function verdict(s, w) {
   const rep = w?.rep, c = rep?.ctx; if (!c) return null;
   const f = facingOf(s, rep), facing = f.facing ?? 90, dom = c.dom || { h: c.hs, d: 0, T: 0 };
-  const sw = `${card(dom.d)} ${ftR(dom.h)} ft ${Math.round(dom.T)} s`, wind = `${card(c.wdir)} ${mph(c.wspd)} mph`;
+  // the real swell (8 s+) first if there is one, then the biggest wind chop
+  const grd = (c.parts || []).filter(p => p.T >= 8 && p.h > 0.15).sort((a, b) => b.h * b.T * b.T - a.h * a.T * a.T)[0];
+  const trains = [grd, (c.parts || []).filter(p => p !== grd && p.h * 3.28 >= 0.8).sort((a, b) => b.h - a.h)[0]].filter(Boolean);
+  const sw = (trains.length ? trains : [dom]).map(p => `${card(p.d)} ${ftR(p.h)} ft ${Math.round(p.T)} s${p.T < 8 ? " (chop)" : ""}`).join(" + "), wind = `${card(c.wdir)} ${mph(c.wspd)} mph`;
   const ww = windWord(facing, c.wdir, c.wspd), bits = [], why = [];
   let tier;
   if (s.type === "spear") {
@@ -74,17 +76,23 @@ export function verdict(s, w) {
     if (vis === "poor") why.push("dirty water after rain"); else if (vis !== "good") why.push("vis only OK");
     tier = swellBad || windBad || vis === "poor" ? 0 : swellOk && windOk && vis === "good" ? 2 : 1;
   } else {
+    // what's surfable is real swell (8 s+). Short-period wind chop (the NE sea-breeze slop) never makes a good surf.
     const S = s.surf, ftAt = rep.ft ?? 0, lo = S.size[0], max = S.maxSize ?? 7;
+    const ground = (c.parts || []).filter(p => p.T >= 8 && p.h > 0.15).sort((a, b) => b.h * b.T * b.T - a.h * a.T * a.T)[0];
+    const sw0 = ground || dom, chop = !ground;
     const off = inArc(c.wdir, S.offshore[0], S.offshore[1]), ws = off ? 1 : windShelter(facing, s.shelterWind, c.wdir);
-    const dirIn = inArc(dom.d, S.swellDir[0], S.swellDir[1]);
-    const windOk = c.wspd < 6 || (off && c.wspd <= 22) || (ws >= 0.6 && c.wspd < 15), windBad = !off && ws <= 0.3 && c.wspd > 10;
+    const dirIn = inArc(sw0.d, S.swellDir[0], S.swellDir[1]);
+    const windOk = c.wspd < 6 || (off && c.wspd <= 22) || (ws >= 0.6 && c.wspd < 12), windBad = !off && ws <= 0.3 && c.wspd > 8;
     const sizeOk = ftAt >= lo && ftAt <= max, sizeBad = ftAt < 1 || ftAt > max + 1;
-    bits.push(`${dirIn ? "open to" : "out of the window for"} the ${card(dom.d)} swell (~${Math.round(ftAt)} ft here)`);
+    const periodOk = sw0.T >= Math.max(9, S.periodMin ?? 9);
+    bits.push(chop ? `only wind chop (${card(dom.d)} ${Math.floor(dom.T)} s, ~${Math.round(ftAt)} ft here)`
+      : `${dirIn ? "open to" : "out of the window for"} the ${card(sw0.d)} ${Math.round(sw0.T)} s swell (~${Math.round(ftAt)} ft here)`);
     bits.push(`${wind} ${off ? "offshore" : ww}`);
     if (sizeBad) why.push(ftAt < 1 ? "flat" : `too big (~${Math.round(ftAt)} ft)`); else if (!sizeOk) why.push(ftAt < lo ? `small (~${Math.round(ftAt)} ft)` : `big (~${Math.round(ftAt)} ft)`);
-    if (!dirIn) why.push(`${card(dom.d)} swell misses it`);
+    if (chop) why.push(`no real swell, just ${Math.floor(dom.T)} s wind chop`);
+    else { if (!dirIn) why.push(`${card(sw0.d)} swell misses it`); if (!periodOk) why.push(`weak ${Math.round(sw0.T)} s period`); }
     if (windBad) why.push(`${wind} onshore`); else if (!windOk) why.push(`${wind} ${ww}`);
-    tier = sizeBad || windBad ? 0 : sizeOk && dirIn && windOk ? 2 : 1;
+    tier = sizeBad || windBad || (chop && dom.T < 7) ? 0 : sizeOk && dirIn && windOk && periodOk ? 2 : 1;
   }
   const needsCheck = s.conf?.shelter === "low";
   if (needsCheck && tier > 1) { tier = 1; why.push("aspect needs checking"); }
@@ -108,7 +116,8 @@ function win(r, labels, s) {
   let m = MEMO.get(r); if (!m) MEMO.set(r, (m = new Map()));
   const key = labels.join();
   if (m.has(key)) return m.get(key);
-  const ws = r.windows.filter(w => labels.includes(w.label) && w.score != null);
+  // dives in daylight proper: no dawn or dusk (low light, poor vis, sharks feeding)
+  const ws = r.windows.filter(w => labels.includes(w.label) && w.score != null && !(s.type === "spear" && (w.label === "Dawn" || w.label === "Evening")));
   let best = null;
   for (const w of ws) {
     const vd = verdict(s, w), val = (w.no ? -99 : 0) + CFG.tierGap * (vd?.tier ?? 0) + 0.5 * w.score + conditions(s, w.rep);
@@ -120,6 +129,7 @@ function win(r, labels, s) {
 }
 // base quality, used before the forecast reaches a day
 const usual = s => (s.type === "spear" ? 5 + (s.spear?.kingfish ?? 0) : 6 + 2 * (s.surf?.quality ?? 0));
+const WHEN = 1.5;      // surf at dawn/morning before the sea breeze, dive in the arvo — a nudge, the forecast can override it
 const REPEAT = 8;      // redoing a spot (same stop, next day): worse than a tier drop, so only when nothing else is near
 const PROV_TIER = 1.2; // past the forecast: assume a typical day (a bit better than marginal)
 // sessions within reach, best first. Forecast days: tier first, then half the rating + the wind/rain extra.
@@ -133,8 +143,9 @@ function sessions(near, res, labels, max, carry) {
     const score = w ? w.score : usual(s);
     const base = w ? (w.no ? -5 : CFG.tierGap * (w.vd?.tier ?? 0) + 0.5 * score + w.cond + 2.5)
       : CFG.tierGap * PROV_TIER + 0.5 * (6.5 + 0.35 * (score - 6.5)) + 2.5 + (carry?.[id] || 0);
+    const when = (s.type === "surf") === (labels === MORNING) ? WHEN : 0; // surf in the morning, dive in the arvo
     out.push({ id, name: s.name, type: s.type, snorkelOnly: !!s.snorkelOnly, easy: s.easy, min: m, score, no: w?.no, label: w?.label, forecast: !!res,
-      tier: w ? w.vd?.tier ?? 0 : null, vd: w?.vd || null, v: base - m / 30 });
+      tier: w ? w.vd?.tier ?? 0 : null, vd: w?.vd || null, v: base - m / 30 + when });
   }
   return out.sort((a, b) => b.v - a.v);
 }
@@ -333,7 +344,7 @@ export function makePlan(dayResults) {
     if (k === 0) {
       // day 1: pick up at 9am, one session on the way (if the drive leaves time), then the arvo near camp
       notes.push("Pick up the van in Bankstown at 9am.");
-      pmList = fresh(sessions(c.near, resFor[d], ["Arvo", "Evening"], 45, carryFor[d]), k);
+      pmList = fresh(sessions(c.near, resFor[d], ARVO_LATE, 45, carryFor[d]), k);
       amList = home[j] > 210 ? [] : fresh(sessions(SPOTS.map(sp => [sp.id, driveMin(TRIP.home, sp)]), resFor[d], ["Morning", "Midday"], CFG.firstMax, carryFor[d]), k)
         .map(x => (x.id === BR ? { ...x, v: x.v + 0.5 } : x))
         .filter(x => x.id !== BR || x.v >= bpLater)
@@ -354,7 +365,7 @@ export function makePlan(dayResults) {
     if (resFor[d]) for (const t of ["spear", "surf"]) {
       if (out.some(x => x.type === t)) continue;
       const near1 = [...amList, ...pmList].filter(x => x.type === t && x.vd).sort((a, b) => b.score - a.score)[0];
-      notes.push(`No ${t === "spear" ? "dive" : "surf"} passes near here today${near1 ? ` — best was ${short(near1.name)}: ${near1.vd.why || "fails"}` : ""}. Rest up or check it on the day.`);
+      notes.push(`No ${t === "spear" ? "dive" : "surf"} worth it near here today${near1 ? ` — best was ${short(near1.name)}: ${near1.vd.why || "fails"}` : ""}. Rest up or check it on the day.`);
     }
     // drive legs: last night's camp (or Bankstown) → morning spot → arvo spot → tonight's camp
     let at = prev ? { name: "camp", pt: prev, isCamp: true } : { name: TRIP.home.name, pt: TRIP.home };
@@ -369,7 +380,7 @@ export function makePlan(dayResults) {
     const pool = [...amList, ...pmList].filter((x, i, a) => a.findIndex(y => y.id === x.id) === i && !picked.some(p => samePlace(p, x.id)));
     const alts = pool.filter(x => x.forecast).sort((a, b) => b.score - a.score).slice(0, 2).map(x => {
       const mine = out.find(o => o.type === x.type);
-      const why = x.repeat ? "already done here — something new instead" : x.vd && mine && x.tier < mine.tier ? `${TIER[x.tier]} — ${x.vd.why}` : x.vd?.why && x.tier < 2 ? x.vd.why
+      const why = x.repeat ? "already done here — something new instead" : x.vd?.why && mine && x.tier <= mine.tier && x.tier < 2 ? x.vd.why
         : mine && x.min > mine.min + 15 ? `further away (${mins(x.min)})` : "close — the pick edged it on wind, rain or driving";
       return { id: x.id, name: x.name, type: x.type, score: x.score, why };
     });
@@ -398,7 +409,7 @@ export function makePlan(dayResults) {
     const i = b.from, ahead = camps.map((c, j) => j).filter(j => (camps[j].lat - camps[i].lat) * b.dir > TOL && D[i][j] <= CFG.maxMove).sort((x, y) => D[i][x] - D[i][y]);
     const f = ahead[0];
     const top = f != null ? [...AR[b.k][f].surf, ...AR[b.k][f].spear].sort((x, y) => y.score - x.score)[0] : null;
-    return { mins: b.mins, text: `${dshort(NIGHTS[b.k])}: backtracks ${mins(b.mins)} ${b.dir > 0 ? "south" : "north"} to ${camps[b.to].name} — nothing ahead passes${f != null ? ` (nearest ahead, around ${short(nearestSpot(camps[f]).name)}: ${top?.vd?.why || "no good sessions"})` : ""}.` };
+    return { mins: b.mins, text: `${dshort(NIGHTS[b.k])}: backtracks ${mins(b.mins)} ${b.dir > 0 ? "south" : "north"} to ${camps[b.to].name} — nothing ahead is working${f != null ? ` (nearest ahead, around ${short(nearestSpot(camps[f]).name)}: ${top?.vd?.why || "no good sessions"})` : ""}.` };
   }
   // last day: morning session, then the van back by 2pm
   const lastJ = route[K - 1], last = camps[lastJ], backMin = home[lastJ];
@@ -450,11 +461,11 @@ function explain({ route, camps, days, resFor, AR, passNight, D, home, TOL, othe
     };
     const a = stat(first), b = stat(other), span = early.length > 1 ? `${dshort(early[0])}–${dshort(early[early.length - 1])}` : dshort(early[0]);
     const r = [];
-    if (a.pass != null && b.pass != null && a.pass > b.pass + 0.08) r.push(`more spots pass the conditions test there (${Math.round(a.pass * 100)}% vs ${Math.round(b.pass * 100)}% ${SIDE[other]})`);
+    if (a.pass != null && b.pass != null && a.pass > b.pass + 0.08) r.push(`more spots are working there (${Math.round(a.pass * 100)}% vs ${Math.round(b.pass * 100)}% ${SIDE[other]})`);
     if (a.rain != null && b.rain != null && a.rain < b.rain * 0.7 - 1) r.push(`to get away from the rain (runoff ${Math.round(a.rain)} vs ${Math.round(b.rain)} ${SIDE[other]})`);
     const close = otherWay && otherWay.gap < 3 ? ` Heading ${SIDE[otherWay.side]} first is almost as good — this can flip as the forecast updates.` : "";
     if (r.length) why.push(`${start}: ${r.join("; and ")} (${span}).${close}`);
-    else why.push(`${start} — both coasts look about the same for ${span} (${a.pass != null ? Math.round(a.pass * 100) : "–"}% vs ${b.pass != null ? Math.round(b.pass * 100) : "–"}% of spots pass), so it goes the way that works out best over the whole trip.${close}`);
+    else why.push(`${start} — both coasts look about the same for ${span} (${a.pass != null ? Math.round(a.pass * 100) : "–"}% vs ${b.pass != null ? Math.round(b.pass * 100) : "–"}% of spots working), so it goes the way that works out best over the whole trip.${close}`);
   }
   // 2. where each leg turns, and why it doesn't go further
   for (const L of legs) {
@@ -469,8 +480,8 @@ function explain({ route, camps, days, resFor, AR, passNight, D, home, TOL, othe
     else {
       const ok = further.filter(j => passNight[k][j] && km(camps[j], far.c) > 25);
       const fj = further[0], top = [...AR[k][fj].surf, ...AR[k][fj].spear].sort((x, y) => y.score - x.score)[0];
-      reason = !ok.length ? `nothing further ${SIDE[L.s]} passes on ${dshort(far.d)}${top?.vd?.why ? ` (around ${short(nearestSpot(camps[fj]).name)}: ${top.vd.why})` : ""}`
-        : `further ${SIDE[L.s]} (around ${short(nearestSpot(camps[ok[0]]).name)}) passes too, but the extra driving there and back costs more than it gains`;
+      reason = !ok.length ? `nothing further ${SIDE[L.s]} is working on ${dshort(far.d)}${top?.vd?.why ? ` (around ${short(nearestSpot(camps[fj]).name)}: ${top.vd.why})` : ""}`
+        : `further ${SIDE[L.s]} (around ${short(nearestSpot(camps[ok[0]]).name)}) looks good too, but the extra driving there and back costs more than it gains`;
     }
     const legDays = days.filter(e => e.day >= L.nights[0].d && e.day <= L.nights[L.nights.length - 1].d);
     const hrs = Math.round(legDays.reduce((s, e) => s + (e.total || 0), 0) / 6) / 10;

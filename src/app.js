@@ -309,14 +309,12 @@ function renderPlan() {
   // north / south of Sydney tag
   const nsTag = lat => (lat > -33.6 ? `<span class="nstag n">N</span>` : lat < -34.0 ? `<span class="nstag s">S</span>` : "");
   const leg = (m, from) => (m == null ? "" : m < 3 ? `right at ${esc(from)}` : `${mins(m)} drive from ${esc(from)}`);
-  const TIERS = [["✗", "fails", "t0"], ["~", "marginal", "t1"], ["✓", "passes", "t2"]];
-  const tierChip = x => { const t = TIERS[x.tier ?? 1]; return `<span class="tierchip ${t[2]}">${t[0]} ${t[1]}</span>`; };
   const sess = (x, day) => {
     const s = SPOTS.find(sp => sp.id === x.id), v = x.vd;
     return `<button class="psess" type="button" data-open="${x.id}" data-day="${day}"><span class="pwhen">${x.when}</span>
       ${x.forecast ? `<span class="badge sm" style="--c:${colour(x.score, x.no)}">${fmtScore(x.score, x.no)}</span>` : ""}
       <span>${spotIcon(s)} <b>${esc(x.name)}</b> ${nsTag(s.lat)}${s.snorkelOnly ? ` <span class="tierchip t1">snorkel only · no-take</span>` : ""}<small>${leg(x.drive ?? x.min, x.driveFrom || "camp")}</small>
-      ${v ? `<small class="praw">${esc(v.raw)}</small><small class="pverd">${tierChip(x)} ${esc(v.line.replace(/^faces \w+ · /, ""))}${v.why && x.tier < 2 ? ` — <em>${esc(v.why)}</em>` : ""}</small>` : ""}</span></button>`;
+      ${v ? `<small class="praw">${esc(v.raw)}</small><small class="pverd">${esc(v.line.replace(/^faces \w+ · /, ""))}${v.why && x.tier < 2 ? ` — <em>${esc(v.why)}</em>` : ""}</small>` : ""}</span></button>`;
   };
   const cand = (o, day) => `<button class="psess cand" type="button" data-open="${o.id}" data-day="${day}"><span>${spotIcon(SPOTS.find(sp => sp.id === o.id))} <b>${esc(o.name)}</b><small>faces ${esc(o.facing)}</small></span></button>`;
   const firmsUp = d => dname(new Date(Date.parse(d + "T12:00:00") - 9 * 864e5).toISOString().slice(0, 10));
@@ -325,7 +323,7 @@ function renderPlan() {
     const note = n => `<p class="pnote">${esc(n)}</p>`, pre = e.notes.filter(n => n.startsWith("Pick up")), post = e.notes.filter(n => !n.startsWith("Pick up"));
     const body = e.forecast ? `${pre.map(note).join("")}${am.map(x => sess(x, e.day)).join("")}${pm.map(x => sess(x, e.day)).join("")}${post.map(note).join("")}`
       : `${e.notes.map(n => `<p class="pnote">${esc(n)}</p>`).join("")}
-        <p class="pnote prov">Somewhere around <b>${esc(e.region)}</b>. Typical late-Oct pattern: S–SE swell, light westerly mornings, NE sea breeze most arvos → dive the north-facing side of a headland (out of the S swell), surf early before the NE gets up.</p>
+        <p class="pnote prov">Somewhere around <b>${esc(e.region)}</b>. Typical late Oct: S–SE swell, light westerly mornings, NE sea breeze most arvos → surf at dawn before the NE gets up; dive in the arvo — the north-facing side of a headland on a S swell, the south side once the NE is blowing.</p>
         <div class="cands">${(e.cands || []).map(o => cand(o, e.day)).join("")}</div>`;
     const why = e.forecast
       ? `${e.brief ? `<p>${esc(e.brief)}</p>` : ""}

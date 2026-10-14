@@ -21,8 +21,8 @@ export const LIMITS = {
   trendBad: 1.2,      // m: rough water at the spot in the last 48 h above this kills the trend points
   gustDanger: 30,     // kn gusts: cap spear scores at 2
   chopWind: 12,       // kn of unsheltered wind before spear chop penalty starts
-  shortPeriod: 7,     // s: surf below this period is mushy wind swell…
-  shortPeriodCap: 6,  // …and can score at most this
+  shortPeriod: 8,     // s: surf below this period is mushy wind chop (the NE sea-breeze slop)…
+  shortPeriodCap: 5,  // …and can score at most this
   strongCurrent: 3,   // km/h of modelled current that makes a shore dive risky (spear capped at 4)
   sharkKm: 5,         // shark sighting/detection within this many km…
   sharkHours: 24,     // …in the previous this-many hours costs points
