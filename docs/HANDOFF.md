@@ -156,6 +156,7 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
   - Surf fail = < 1 ft, > maxSize+1, or onshore > 10 kn.
   - `conf.shelter: "low"` = "aspect needs check": capped at marginal.
   - Value = 6·tier + ½·score + wind/rain extra. Failing sessions are never picked; a day with no safe dive or surf says so. Tiers are internal only (no pass/marginal labels in the UI — Jacob, 14 Oct).
+  - A surf only goes in the plan when it would pass AND rates SURF_MIN (6.5)+ — Jacob: no 5–6/10 surfs (Surfline yellow/red). No surf worth it → a dive day (two good dives if they fit), with a note naming the best surf and why it misses.
   - Surf only counts real swell (8 s+; pass needs 9 s+). Short-period NE wind chop is called out as "only wind chop" and never rates well. Surf is nudged to dawn/morning and dives to midday/arvo (WHEN = 1.5); dives never use the Dawn or Evening windows.
 - **Routing:**
   - Knobs in `CFG` at the top of plan.js: firstMax 300, lastMax 180, maxMove 240, backtrackMax 45, dayDetour 30, driveCost 1.5, bothSides 4.

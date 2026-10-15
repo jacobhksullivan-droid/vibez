@@ -130,6 +130,7 @@ function win(r, labels, s) {
 // base quality, used before the forecast reaches a day
 const usual = s => (s.type === "spear" ? 5 + (s.spear?.kingfish ?? 0) : 6 + 2 * (s.surf?.quality ?? 0));
 const WHEN = 1.5;      // surf at dawn/morning before the sea breeze, dive in the arvo — a nudge, the forecast can override it
+const SURF_MIN = 6.5;  // /10 — below this a surf isn't worth planning (that's Surfline yellow/red)
 const REPEAT = 8;      // redoing a spot (same stop, next day): worse than a tier drop, so only when nothing else is near
 const PROV_TIER = 1.2; // past the forecast: assume a typical day (a bit better than marginal)
 // sessions within reach, best first. Forecast days: tier first, then half the rating + the wind/rain extra.
@@ -144,8 +145,10 @@ function sessions(near, res, labels, max, carry) {
     const base = w ? (w.no ? -5 : CFG.tierGap * (w.vd?.tier ?? 0) + 0.5 * score + w.cond + 2.5)
       : CFG.tierGap * PROV_TIER + 0.5 * (6.5 + 0.35 * (score - 6.5)) + 2.5 + (carry?.[id] || 0);
     const when = (s.type === "surf") === (labels === MORNING) ? WHEN : 0; // surf in the morning, dive in the arvo
+    // a surf only makes the plan when it's actually good (Surfline green, not yellow/red): real swell, wind OK, rating SURF_MIN+
+    const tier = !w ? null : s.type === "surf" && ((w.vd?.tier ?? 0) < 2 || score < SURF_MIN) ? 0 : w.vd?.tier ?? 0;
     out.push({ id, name: s.name, type: s.type, snorkelOnly: !!s.snorkelOnly, easy: s.easy, min: m, score, no: w?.no, label: w?.label, forecast: !!res,
-      tier: w ? w.vd?.tier ?? 0 : null, vd: w?.vd || null, v: base - m / 30 + when });
+      tier, vd: w?.vd || null, v: base - m / 30 + when });
   }
   return out.sort((a, b) => b.v - a.v);
 }
@@ -168,7 +171,14 @@ function pickDay(amList, pmList, detour, cap) {
     }
   }
   if (best || fb) return best || fb;
-  // no surf + dive pair: just the best safe session (arvo if there is one)
+  // no surf worth it: two dives at different places if both are good, else the best single session
+  let two = null;
+  for (const am of amList.filter(x => x.type === "spear" && x.tier === 2).slice(0, 6))
+    for (const pm of pmList.filter(x => x.type === "spear" && x.tier === 2 && !samePlace(x.id, am.id)).slice(0, 6)) {
+      const ex = detour(am, pm);
+      if (ex <= cap && (!two || am.v + pm.v > two.v)) two = { am, pm, v: am.v + pm.v };
+    }
+  if (two) return two;
   return pmList[0] ? { pm: pmList[0] } : { am: amList[0] };
 }
 function nearestSpot(p) { return SPOTS.map(sp => [sp, km(sp, p)]).sort((a, b) => a[1] - b[1])[0][0]; }
@@ -365,7 +375,7 @@ export function makePlan(dayResults) {
     if (resFor[d]) for (const t of ["spear", "surf"]) {
       if (out.some(x => x.type === t)) continue;
       const near1 = [...amList, ...pmList].filter(x => x.type === t && x.vd).sort((a, b) => b.score - a.score)[0];
-      notes.push(`No ${t === "spear" ? "dive" : "surf"} worth it near here today${near1 ? ` — best was ${short(near1.name)}: ${near1.vd.why || "fails"}` : ""}. Rest up or check it on the day.`);
+      notes.push(`No ${t === "spear" ? "dive" : "surf"} worth it near here today${near1 ? ` — best is ${short(near1.name)} at ${Math.round(near1.score)}/10${near1.vd.why ? ` (${near1.vd.why})` : ""}` : ""}.${t === "surf" ? (out.filter(x => x.type === "spear").length > 1 ? " Two dives instead." : " Dive day.") : ""}`);
     }
     // drive legs: last night's camp (or Bankstown) → morning spot → arvo spot → tonight's camp
     let at = prev ? { name: "camp", pt: prev, isCamp: true } : { name: TRIP.home.name, pt: TRIP.home };
