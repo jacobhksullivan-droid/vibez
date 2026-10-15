@@ -84,7 +84,7 @@ export function verdict(s, w) {
     const dirIn = inArc(sw0.d, S.swellDir[0], S.swellDir[1]);
     const windOk = c.wspd < 6 || (off && c.wspd <= 22) || (ws >= 0.6 && c.wspd < 12), windBad = !off && ws <= 0.3 && c.wspd > 8;
     const sizeOk = ftAt >= lo && ftAt <= max, sizeBad = ftAt < 1 || ftAt > max + 1;
-    const periodOk = sw0.T >= Math.max(9, S.periodMin ?? 9);
+    const periodOk = sw0.T >= (S.periodMin ?? 8); // 8–9 s E swell at 3–4 ft with light wind is a fun surf here
     bits.push(chop ? `only wind chop (${card(dom.d)} ${Math.floor(dom.T)} s, ~${Math.round(ftAt)} ft here)`
       : `${dirIn ? "open to" : "out of the window for"} the ${card(sw0.d)} ${Math.round(sw0.T)} s swell (~${Math.round(ftAt)} ft here)`);
     bits.push(`${wind} ${off ? "offshore" : ww}`);
@@ -158,8 +158,13 @@ const NB = Object.fromEntries(SPOTS.map(a => [a.id, SPOTS.filter(b => km(a, b) <
 const samePlace = (a, b) => a === b || (NB[a] || []).includes(b);
 const spDrive = (a, b) => driveMin(SPOT[a.id], SPOT[b.id]);
 // one surf + one dive (either order) whose detour off the day's drive fits the cap; if nothing fits, the smallest detour
-function pickDay(amList, pmList, detour, cap) {
+function pickDay(amList, pmList, detour, cap, noRepeat = true) {
   amList = amList.filter(x => x.tier !== 0); pmList = pmList.filter(x => x.tier !== 0); // never a session that fails the conditions test
+  // somewhere new first; a spot already done here only if nothing else fits
+  if (noRepeat && (amList.some(x => x.repeat) || pmList.some(x => x.repeat))) {
+    const fresh = pickDay(amList.filter(x => !x.repeat), pmList.filter(x => !x.repeat), detour, cap, false);
+    if (fresh.am || fresh.pm) return fresh;
+  }
   let best = null, fb = null;
   for (const [a, b] of [["surf", "spear"], ["spear", "surf"]]) {
     for (const am of amList.filter(x => x.type === a).slice(0, 8)) {
@@ -173,8 +178,8 @@ function pickDay(amList, pmList, detour, cap) {
   if (best || fb) return best || fb;
   // no surf worth it: two dives at different places if both are good, else the best single session
   let two = null;
-  for (const am of amList.filter(x => x.type === "spear" && x.tier === 2).slice(0, 6))
-    for (const pm of pmList.filter(x => x.type === "spear" && x.tier === 2 && !samePlace(x.id, am.id)).slice(0, 6)) {
+  for (const am of amList.filter(x => x.type === "spear" && x.tier === 2 && !x.repeat).slice(0, 6))
+    for (const pm of pmList.filter(x => x.type === "spear" && x.tier === 2 && !x.repeat && !samePlace(x.id, am.id)).slice(0, 6)) {
       const ex = detour(am, pm);
       if (ex <= cap && (!two || am.v + pm.v > two.v)) two = { am, pm, v: am.v + pm.v };
     }
