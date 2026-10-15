@@ -173,3 +173,12 @@ Everything a new session needs to continue where we left off. Read with `CLAUDE.
   - No-take zones on the map are ocean/marine-bay only (`water: "estuary"` tagged in zones.geojson and hidden). Spot legal tags are unchanged (inside-only).
 - **New spot `bushrangers-bay`** (snorkelOnly, inside Bushrangers Bay Aquatic Reserve): shown as 🤿 "snorkel only · no-take", never in spear rankings (home/outlook/camps). It's offered as a day-1 on-the-way stop (+0.5) unless the later Bass Point day is better; same place as Bass Point (3 km rule).
 - The plan is computed once per forecast refresh (`getPlan()` cache in app.js, ~1–2.5 s), shared by Plan and Map.
+
+## 20. Plan tab scrapped → Coast tab (15 Oct 2026)
+- Jacob: "scrap the plan page, it's not working, replace it with conditions for each section of the coast". src/plan.js deleted (history in git, commits e75089f…).
+- New tab "Coast" (`src/coast.js`, `renderCoastView` in app.js): day chips (forecast days from today; trip days outlined; defaults to the first trip day the forecast reaches), the day's best surf + best dive on the whole coast, then one card per region (north at the top):
+  - swell at 7am for the spot nearest the middle of the region — the real swell (8 s+, ≥ ~1 ft) and the biggest wind chop, or "no real swell",
+  - wind at 7am and 2pm (mph),
+  - rain: the region's average over the 3 days before + on the day,
+  - the region's best surf and best dive (score, best window, short reason) — tap to open the spot.
+- Kept from the plan work: Bushrangers Bay snorkel spot, ocean-only zones on the map, surf chop cap (shortPeriod 8 s → max 5/10).

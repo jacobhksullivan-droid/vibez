@@ -490,23 +490,21 @@ body { text-shadow: none; }
 .nstag.n { background: #7fd8f2; }
 .nstag.s { background: #f2cc3d; }
 
-/* plan: conditions verdicts, provisional days, explainers, map links */
-.praw { font-variant-numeric: tabular-nums; }
-.pverd { line-height: 1.35; }
-.pverd em { font-style: normal; color: var(--ink); opacity: .85; }
-.tierchip { display: inline-block; font-size: .68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
-.tierchip.t2 { color: var(--s9); } .tierchip.t1 { color: var(--s5); } .tierchip.t0 { color: var(--s1); }
-.pday header .mapbtn { margin-left: auto; }
-.mapbtn { background: none; border: 1px solid var(--line); color: var(--accent); font: inherit; font-size: .75rem; border-radius: 999px; padding: 2px 10px; cursor: pointer; }
-.whycard .mapbtn { margin-top: 8px; }
-.pnote.prov { color: var(--muted); }
-.cands { display: grid; gap: 6px; }
-.psess.cand { padding: 5px 8px; }
-.pback { margin: 0; font-size: .8rem; color: #ff9f43; }
-.pwhy summary { cursor: pointer; font-size: .8rem; color: var(--accent); list-style: none; }
-.pwhy summary::-webkit-details-marker { display: none; }
-.pwhy summary::after { content: " ›"; }
-.pwhy[open] summary::after { content: " ⌄"; }
-.pwhy p { margin: 6px 0 0; font-size: .8rem; line-height: 1.4; }
-.daypin { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: .72rem; font-weight: 700; background: #0d3b52; color: #fff; border: 2px solid #ffd166; box-shadow: 0 1px 4px rgba(0,0,0,.5); opacity: .7; }
-.daypin.on { opacity: 1; background: #ffd166; color: #0d3b52; }
+
+/* coast tab: conditions per section of the coast */
+.cdays { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.cdays::-webkit-scrollbar { display: none; }
+.cday { flex: 0 0 auto; display: grid; justify-items: center; min-width: 46px; padding: 6px 8px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+.cday small { font-size: .68rem; color: var(--muted); } .cday b { font-size: 1rem; }
+.cday.trip { border-color: var(--accent); }
+.cday.on { background: var(--accent); color: #062433; } .cday.on small { color: #062433; }
+.ctop { display: grid; gap: 6px; }
+.ctop .cspot { background: var(--card); border: 1px solid var(--line); }
+.ccards { display: grid; gap: 12px; }
+.ccard { background: var(--card); border: 1px solid var(--line); border-radius: 26px; padding: 12px; display: grid; gap: 8px; box-shadow: var(--glass-hi), var(--glass-shadow); }
+.ccard header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cpins { display: flex; align-items: center; gap: 4px; font-size: .85rem; white-space: nowrap; }
+.cfacts { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 0; font-size: .85rem; }
+.cfacts dt { color: var(--muted); } .cfacts dd { margin: 0; }
+.cspot { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: var(--bg); border: 0; border-radius: 18px; padding: 6px 8px; color: var(--ink); font: inherit; cursor: pointer; }
+.cspot small { display: block; color: var(--muted); font-size: .75rem; }

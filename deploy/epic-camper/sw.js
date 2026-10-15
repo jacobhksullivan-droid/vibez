@@ -1,12 +1,12 @@
 // Offline support: keeps the app, its data and any map tiles you've looked at.
-const VERSION = "93e764aa67";
+const VERSION = "ba92a0fb37";
 const SHELL = `shell-${VERSION}`;
 const TILES = "tiles-v1";
 const MAX_TILES = 3000;
 const FILES = [
   "./", "index.html", "style.css", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png",
   "src/gate.js", "src/app.js", "src/data.js", "src/score.js", "src/charts.js", "src/home.js", "src/outlook.js", "src/location.js", "src/buoys.js",
-  "data/secure.bin", "data/zones.geojson", "data/camps.js", "src/camps.js", "src/correct.js", "src/live.js", "src/bomwind.js", "src/plan.js", "src/camps.js",
+  "data/secure.bin", "data/zones.geojson", "data/camps.js", "src/camps.js", "src/correct.js", "src/live.js", "src/bomwind.js", "src/coast.js", "src/camps.js",
 ];
 const CDN = [
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
